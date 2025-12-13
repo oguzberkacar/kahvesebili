@@ -1,0 +1,96 @@
+[
+    {
+        "id": "ethiopia",
+        "name": "Ethiopia",
+        "image": "/cups/cold/cup1.png",
+        "tags": [
+            "Cold"
+        ],
+        "description": "A smooth, medium-bodied coffee with hints of forest berries",
+        "roast": "Light Roast",
+        "details": {
+            "Process": "Washed",
+            "Region": "Sidama, Yirgacheffe",
+            "Altitude": "1800–2200m",
+            "Variety": "Heirloom",
+            "Flavor Notes": "Bergamot, Jasmine, Citrus, Peach, Honey"
+        },
+        "sizes": {
+            "small": {
+                "price": 85,
+                "volume": "250ml"
+            },
+            "medium": {
+                "price": 95,
+                "volume": "350ml"
+            },
+            "large": {
+                "price": 110,
+                "volume": "500ml"
+            }
+        }
+    },
+    {
+        "id": "colombia",
+        "name": "Colombia",
+        "image": "/cups/cold/cup2.png",
+        "tags": [
+            "Hot",
+            "Cold"
+        ],
+        "description": "A balanced and sweet coffee with caramel notes and a pleasant acidity",
+        "roast": "Medium Roast",
+        "details": {
+            "Process": "Washed",
+            "Region": "Huila",
+            "Altitude": "1500–1800m",
+            "Variety": "Caturra, Castillo",
+            "Flavor Notes": "Caramel, Green Apple, Red Fruit, Citrus"
+        },
+        "sizes": {
+            "small": {
+                "price": 85,
+                "volume": "250ml"
+            },
+            "medium": {
+                "price": 95,
+                "volume": "350ml"
+            },
+            "large": {
+                "price": 110,
+                "volume": "500ml"
+            }
+        }
+    },
+    {
+        "id": "brasil",
+        "name": "Brasil",
+        "image": "/cups/cold/cup3.png",
+        "tags": [
+            "Hot"
+        ],
+        "description": "A full-bodied coffee with rich chocolate and nutty flavors, low acidity",
+        "roast": "Medium-Dark Roast",
+        "details": {
+            "Process": "Natural",
+            "Region": "Minas Gerais",
+            "Altitude": "900–1200m",
+            "Variety": "Bourbon, Mundo Novo",
+            "Flavor Notes": "Chocolate, Hazelnut, Brown Sugar, Dried Fruit"
+        },
+        "sizes": {
+            "small": {
+                "price": 80,
+                "volume": "250ml"
+            },
+            "medium": {
+                "price": 90,
+                "volume": "350ml"
+            },
+            "large": {
+                "price": 105,
+                "volume": "500ml"
+            }
+        }
+    }
+]
