@@ -3,7 +3,9 @@
         "id": "ethiopia",
         "stationId": 1,
         "name": "Ethiopia",
+        "isActive": false,
         "image": "/cups/cold/cup1.png",
+        "imageRaw": "/cups/cold/cup1_raw.png",
         "tags": [
             "Cold"
         ],
@@ -35,7 +37,9 @@
         "id": "colombia",
         "stationId": 4,
         "name": "Colombia",
+        "isActive": true,
         "image": "/cups/hot/cup2.png",
+        "imageRaw": "/cups/hot/cup2_raw.png",
         "tags": [
             "Hot"
         ],
@@ -67,7 +71,9 @@
         "id": "brasil",
         "stationId": 7,
         "name": "Brasil",
+        "isActive": true,
         "image": "/cups/hot/cup1.png",
+        "imageRaw": "/cups/hot/cup1_raw.png",
         "tags": [
             "Hot"
         ],
@@ -99,7 +105,9 @@
         "id": "guatemala",
         "stationId": 2,
         "name": "Guatemala",
+        "isActive": true,
         "image": "/cups/cold/cup2.png",
+        "imageRaw": "/cups/cold/cup2_raw.png",
         "tags": [
             "Cold"
         ],
@@ -131,7 +139,9 @@
         "id": "costa-rica",
         "stationId": 9,
         "name": "Costa Rica",
+        "isActive": true,
         "image": "/cups/hot/cup2.png",
+        "imageRaw": "/cups/hot/cup2_raw.png",
         "tags": [
             "Hot"
         ],
@@ -163,7 +173,9 @@
         "id": "kenya",
         "stationId": 5,
         "name": "Kenya",
+        "isActive": true,
         "image": "/cups/cold/cup1.png",
+        "imageRaw": "/cups/cold/cup1_raw.png",
         "tags": [
             "Cold"
         ],
@@ -195,7 +207,9 @@
         "id": "indonesia",
         "stationId": 8,
         "name": "Indonesia",
+        "isActive": true,
         "image": "/cups/hot/cup1.png",
+        "imageRaw": "/cups/hot/cup1_raw.png",
         "tags": [
             "Hot"
         ],
@@ -227,7 +241,9 @@
         "id": "vietnam",
         "stationId": 3,
         "name": "Vietnam",
+        "isActive": true,
         "image": "/cups/cold/cup2.png",
+        "imageRaw": "/cups/cold/cup2_raw.png",
         "tags": [
             "Cold"
         ],
@@ -259,7 +275,9 @@
         "id": "jamaica",
         "stationId": 6,
         "name": "Jamaica",
+        "isActive": true,
         "image": "/cups/hot/cup2.png",
+        "imageRaw": "/cups/hot/cup2_raw.png",
         "tags": [
             "Hot"
         ],
@@ -291,7 +309,9 @@
         "id": "honduras",
         "stationId": 10,
         "name": "Honduras",
+        "isActive": true,
         "image": "/cups/hot/cup1.png",
+        "imageRaw": "/cups/hot/cup1_raw.png",
         "tags": [
             "Hot"
         ],

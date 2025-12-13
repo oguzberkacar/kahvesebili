@@ -1,17 +1,82 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import coffees from "../data/coffees.json";
 import CoffeeCard from "../components/CoffeeCard";
+import CoffeeDetail from "../components/CoffeeDetail";
+
+export interface Sizes {
+  small: { price: number; volume: string };
+  medium: { price: number; volume: string };
+  large: { price: number; volume: string };
+}
+
+export interface Coffee {
+  id: string;
+  name: string;
+  image: string;
+  tags: string[];
+  description: string;
+  roast: string;
+  details: {
+    Process: string;
+    Region: string;
+    Altitude: string;
+    Variety: string;
+    "Flavor Notes": string;
+  };
+  sizes: Sizes;
+}
 
 export default function OrderPage() {
+  const [selectedCoffee, setSelectedCoffee] = useState<Coffee | null>(null);
+  const [activeView, setActiveView] = useState<"list" | "detail">("list");
+
+  const handleCoffeeClick = (coffee: Coffee) => {
+    setSelectedCoffee(coffee);
+    setActiveView("detail");
+  };
+
+  const handleBack = () => {
+    setActiveView("list");
+    // Optional: Clear selection after animation
+    setTimeout(() => {
+      setSelectedCoffee(null);
+    }, 500);
+  };
+
   return (
-    <main className="min-h-screen w-full bg-quaternary flex flex-col items-center">
-      {/* Content Grid */}
-      <div className="w-full max-w-[800px] px-6 pb-24">
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-2">
-          {coffees.map((coffee) => (
-            <CoffeeCard key={coffee.id} coffee={coffee as any} />
-          ))}
+    <main className="h-screen w-full bg-quaternary overflow-hidden relative">
+      {/* Sliding Container */}
+      <div
+        className="flex w-[200%] h-full transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)]"
+        style={{ transform: activeView === "list" ? "translateX(0)" : "translateX(-50%)" }}
+      >
+        {/* LIST VIEW (Left Half) */}
+        <div className="w-1/2 h-full flex flex-col items-center overflow-y-auto">
+          {/* Content Grid */}
+          <div className="w-full max-w-[800px] px-6 pb-24 pt-8">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-2">
+              {coffees.map((coffee) => (
+                <div key={coffee.id} onClick={() => handleCoffeeClick(coffee as Coffee)}>
+                  {/* Wrapping in div to handle click without refactoring Card props yet, 
+                       though better to pass onClick to Card for accessibility. 
+                       For now, div wrapper works for the "click anywhere on card" requirement. 
+                       User asked for 'card scale down', we'll handle that via Card interaction later or active state.
+                   */}
+                  <CoffeeCard coffee={coffee as Coffee} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* DETAIL VIEW (Right Half) */}
+        <div className="w-1/2 h-full bg-quaternary">
+          {selectedCoffee ? (
+            <CoffeeDetail coffee={selectedCoffee as any} onBack={handleBack} />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">Loading...</div>
+          )}
         </div>
       </div>
     </main>
