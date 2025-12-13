@@ -1,6 +1,20 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export default function Home() {
+  const env = process.env.APP_ENV;
+
+  if (env === "master") {
+    redirect("/siparis");
+  }
+
+  if (env === "station") {
+    const stationId = process.env.STATION_ID;
+    if (stationId) {
+      redirect(`/station/${stationId}`);
+    }
+  }
+
   return (
     <main className="min-h-screen w-full bg-black flex flex-col items-center justify-center gap-8 text-white">
       <h1 className="text-4xl font-bold tracking-wider">Welcome</h1>
