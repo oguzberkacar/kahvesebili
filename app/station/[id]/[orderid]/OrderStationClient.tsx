@@ -41,23 +41,11 @@ type SmokeState = {
 // Smoke Animation Data
 const smokeStates: SmokeState[][] = [
   // Step 0: Initial (Low opacity, small)
-  [
-    { w: "30px", h: "35px", s: 0.5, top: "40px", left: "60px", opacity: 0 },
-    { w: "30px", h: "35px", s: 0.5, top: "50px", right: "60px", opacity: 0 },
-    { w: "30px", h: "35px", s: 0.5, top: "30px", left: "100px", opacity: 0 },
-  ],
+  [{ w: "30px", h: "35px", s: 0.5, bottom: "10px", left: "142px", opacity: 0 }],
   // Step 1: Rising (Visible)
-  [
-    { w: "30px", h: "35px", s: 1, top: "-40px", left: "60px", opacity: 0.6 },
-    { w: "30px", h: "35px", s: 1, top: "-20px", right: "60px", opacity: 0.8 },
-    { w: "30px", h: "35px", s: 1, top: "-50px", left: "100px", opacity: 0.5 },
-  ],
+  [{ w: "30px", h: "35px", s: 1, bottom: "70px", left: "142px", opacity: 0.6 }],
   // Step 2: Full Rise (Higher)
-  [
-    { w: "30px", h: "35px", s: 1.2, top: "-80px", left: "55px", opacity: 0 },
-    { w: "30px", h: "35px", s: 1.2, top: "-90px", right: "55px", opacity: 0 },
-    { w: "30px", h: "35px", s: 1.2, top: "-100px", left: "105px", opacity: 0 },
-  ],
+  [{ w: "30px", h: "35px", s: 1.1, bottom: "260px", left: "142px", opacity: 1 }],
 ];
 
 const iceStates: IceState[][] = [
