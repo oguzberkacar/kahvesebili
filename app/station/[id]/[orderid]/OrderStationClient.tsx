@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import KardoraBaseLogo from "../../../components/KardoraBaseLogo";
 import CupFrameIcon from "../../../components/CupFrameIcon";
 import IceCube from "../../../components/IceCube";
+import SmokeIcon from "../../../components/SmokeIcon"; // Import SmokeIcon
+import LiquidSvg from "../../../components/LiquidSvg"; // Import LiquidSvg
 import { Pause } from "lucide-react";
 
 type Props = {
@@ -12,38 +14,91 @@ type Props = {
 };
 
 // Animation Data
-const iceStates = [
+// Animation Data
+const liquidHeights = ["0%", "15%", "100%"];
+type IceState = {
+  w: string;
+  h: string;
+  r: number;
+  s?: number;
+  top?: string;
+  bottom?: string;
+  left?: string;
+  right?: string;
+};
+
+type SmokeState = {
+  w: string;
+  h: string;
+  s?: number;
+  top?: string;
+  bottom?: string;
+  left?: string;
+  right?: string;
+  opacity?: number;
+};
+
+// Smoke Animation Data
+const smokeStates: SmokeState[][] = [
+  // Step 0: Initial (Low opacity, small)
+  [
+    { w: "30px", h: "35px", s: 0.5, top: "40px", left: "60px", opacity: 0 },
+    { w: "30px", h: "35px", s: 0.5, top: "50px", right: "60px", opacity: 0 },
+    { w: "30px", h: "35px", s: 0.5, top: "30px", left: "100px", opacity: 0 },
+  ],
+  // Step 1: Rising (Visible)
+  [
+    { w: "30px", h: "35px", s: 1, top: "-40px", left: "60px", opacity: 0.6 },
+    { w: "30px", h: "35px", s: 1, top: "-20px", right: "60px", opacity: 0.8 },
+    { w: "30px", h: "35px", s: 1, top: "-50px", left: "100px", opacity: 0.5 },
+  ],
+  // Step 2: Full Rise (Higher)
+  [
+    { w: "30px", h: "35px", s: 1.2, top: "-80px", left: "55px", opacity: 0 },
+    { w: "30px", h: "35px", s: 1.2, top: "-90px", right: "55px", opacity: 0 },
+    { w: "30px", h: "35px", s: 1.2, top: "-100px", left: "105px", opacity: 0 },
+  ],
+];
+
+const iceStates: IceState[][] = [
   // Step 0: Initial (Hidden at bottom / clustered)
   [
-    { w: "40.392px", h: "40.392px", r: -16.179, bottom: "10px", left: "40%" },
-    { w: "43.156px", h: "43.156px", r: 55.96, bottom: "5px", left: "20%" },
-    { w: "51.246px", h: "51.246px", r: -28.98, bottom: "15px", left: "60%" },
-    { w: "46.054px", h: "46.054px", r: -51.167, bottom: "8px", left: "30%" },
-    { w: "40.712px", h: "40.712px", r: 121.461, bottom: "12px", left: "55%" },
+    { w: "40.392px", h: "40.392px", r: -30.241, s: 0.1, top: "-72.257px", right: "116.886px" },
+    { w: "43.156px", h: "43.156px", r: 20.295, s: 0.1, top: "-79.436px", left: "63.455px" },
+    { w: "51.246px", h: "51.246px", r: 55.502, s: 0.1, top: "-126.82px", left: "109.423px" },
+    { w: "46.054px", h: "46.054px", r: 35.21, s: 0.1, top: "-126.82px", left: "109.423px" },
+    { w: "40.712px", h: "40.712px", r: 103.092, s: 0.1, top: "-132.564px", left: "52px" },
   ],
   // Step 1: Float Up (Middle of cup)
   [
-    { w: "40.392px", h: "40.392px", r: 33.14, bottom: "60px", left: "35%" },
-    { w: "43.156px", h: "43.156px", r: -0.754, bottom: "85px", left: "15%" },
-    { w: "51.246px", h: "51.246px", r: 33.14, bottom: "70px", left: "65%" },
-    { w: "46.054px", h: "46.054px", r: 33.14, bottom: "50px", left: "45%" },
-    { w: "40.712px", h: "40.712px", r: 77.258, bottom: "90px", left: "55%" },
+    { w: "40.392px", h: "40.392px", r: 33.14, s: 1, bottom: "31.353px", right: "77.491px" },
+    { w: "43.156px", h: "43.156px", r: -0.754, s: 1, bottom: "44.152px", right: "117.155px" },
+    { w: "51.246px", h: "51.246px", r: 33.14, s: 1, bottom: "31.818px", left: "87px" },
+    { w: "46.054px", h: "46.054px", r: 33.14, s: 1, bottom: "70.081px", right: "74.267px" },
+    { w: "40.712px", h: "40.712px", r: 77.258, s: 1, bottom: "76.516px", left: "102.388px" },
   ],
   // Step 2: Float Higher (Top of liquid)
   [
-    { w: "40.392px", h: "40.392px", r: -30.241, bottom: "140px", left: "40%" },
-    { w: "43.156px", h: "43.156px", r: 20.295, bottom: "160px", left: "20%" },
-    { w: "51.246px", h: "51.246px", r: 55.502, bottom: "150px", left: "60%" },
-    { w: "46.054px", h: "46.054px", r: 35.21, bottom: "135px", left: "30%" },
-    { w: "40.712px", h: "40.712px", r: 103.092, bottom: "170px", left: "50%" },
+    { w: "40.392px", h: "40.392px", r: -30.241, s: 1, top: "17.744px", right: "61.008px" },
+    { w: "43.156px", h: "43.156px", r: 20.295, s: 1, top: "59.385px", right: "88.082px" },
+    { w: "51.246px", h: "51.246px", r: 55.502, s: 1, top: "62.077px", left: "90.539px" },
+    { w: "46.054px", h: "46.054px", r: 35.21, s: 1, top: "12px", right: "116.679px" },
+    { w: "40.712px", h: "40.712px", r: 103.092, s: 1, top: "24.923px", left: "61px" },
   ],
 ];
 
 export default function OrderStationClient({ coffee, displayOrderId }: Props) {
   const [isStarted, setIsStarted] = useState(false);
   const [animationStep, setAnimationStep] = useState(0);
+  const [manualStep, setManualStep] = useState<number | null>(null);
 
   useEffect(() => {
+    // If manual step is active, ignore auto-play logic
+    if (manualStep !== null) {
+      setAnimationStep(manualStep);
+      return;
+    }
+
     let timers: NodeJS.Timeout[] = [];
 
     if (isStarted) {
@@ -57,7 +112,7 @@ export default function OrderStationClient({ coffee, displayOrderId }: Props) {
     }
 
     return () => timers.forEach((t) => clearTimeout(t));
-  }, [isStarted]);
+  }, [isStarted, manualStep]);
 
   return (
     <div className="w-full h-screen bg-gray-100 flex items-center justify-center p-4">
@@ -138,29 +193,62 @@ export default function OrderStationClient({ coffee, displayOrderId }: Props) {
             isStarted ? "opacity-100" : "opacity-0"
           }`}
         >
-          <div className="relative w-[231px] h-[276px] overflow-hidden">
+          <div className="relative w-[299px] h-[297px] overflow-hidden">
+            {/* Liquid Layer Wrapper */}
+            <div className="absolute left-[58px]  top-[14px] bottom-6 z-0 flex items-end justify-center">
+              <LiquidSvg heightRaw={liquidHeights[animationStep]} fill="white" />
+            </div>
+
             {/* Ice Cubes */}
-            {iceStates[0].map((_, index) => {
-              const state = iceStates[animationStep][index];
-              return (
-                <IceCube
-                  key={index}
-                  width={state.w}
-                  height={state.h}
-                  rotation={state.r}
-                  style={{
-                    bottom: state.bottom,
-                    left: state.left,
-                    // If current step is 0 (initial), render them but maybe below view if needed,
-                    // but user said "start bottom then fill up".
-                    // The positions I put in Step 0 are low (5-15px).
-                  }}
-                />
-              );
-            })}
+            {coffee.tags?.includes("Cold") &&
+              iceStates[0].map((_, index) => {
+                const state = iceStates[animationStep][index];
+
+                // Normalize positions to top/left to ensure CSS transitions work
+                // (CSS cannot transition between 'top' and 'bottom' properties otherwise)
+                const top = state.top ?? `calc(100% - ${state.bottom || "0px"} - ${state.h})`;
+                const left = state.left ?? `calc(100% - ${state.right || "0px"} - ${state.w})`;
+
+                return (
+                  <IceCube
+                    key={index}
+                    width={state.w}
+                    height={state.h}
+                    rotation={state.r}
+                    scale={state.s ?? 1}
+                    style={{ top, left }}
+                  />
+                );
+              })}
+
+            {/* Smoke (For Hot Drinks) */}
+            {!coffee.tags?.includes("Cold") &&
+              smokeStates[0].map((_, index) => {
+                // Determine smoke state. Cycle through states or loop if needed.
+                // For simple 3-step animation, we can just use animationStep
+                const state = smokeStates[Math.min(animationStep, 2)][index];
+
+                return (
+                  <SmokeIcon
+                    key={`smoke-${index}`}
+                    className="absolute transition-all duration-1000 ease-in-out"
+                    style={{
+                      width: state.w,
+                      height: state.h,
+                      top: state.top,
+                      left: state.left,
+                      right: state.right,
+                      bottom: state.bottom,
+                      transform: `scale(${state.s ?? 1})`,
+                      opacity: state.opacity ?? 1,
+                      zIndex: 15, // Below frame (20) but above liquid (0) and potentially above/mix with ice
+                    }}
+                  />
+                );
+              })}
 
             {/* Frame on top */}
-            <div className="absolute inset-0 pointer-events-none z-20">
+            <div className="absolute left-[37px] right-[37px] top-3 bottom-3 pointer-events-none z-20">
               <CupFrameIcon />
             </div>
           </div>
@@ -190,6 +278,46 @@ export default function OrderStationClient({ coffee, displayOrderId }: Props) {
             </button>
           )}
         </div>
+      </div>
+      <div className="absolute top-4 right-4 z-50 flex flex-col gap-2 bg-black/50 p-2 rounded text-white text-xs backdrop-blur-md">
+        <div className="font-bold border-b border-white/20 pb-1 mb-1">Debug Controls</div>
+        <div className="flex items-center gap-2">
+          <span>Animation:</span>
+          {manualStep === null ? (
+            <span className="text-green-400 font-bold">Auto</span>
+          ) : (
+            <span className="text-yellow-400 font-bold">Manual ({manualStep})</span>
+          )}
+        </div>
+
+        <div className="flex gap-1">
+          {[0, 1, 2].map((s) => (
+            <button
+              key={s}
+              onClick={() => {
+                setManualStep(s);
+                setIsStarted(true); // Ensure UI is in started state
+              }}
+              className={`px-3 py-1.5 rounded transition-colors ${
+                manualStep === s ? "bg-blue-600 text-white shadow-inner" : "bg-white/10 hover:bg-white/20"
+              }`}
+            >
+              Step {s}
+            </button>
+          ))}
+        </div>
+
+        <button
+          onClick={() => {
+            setManualStep(null);
+            setIsStarted(false); // Reset to initial state
+          }}
+          className={`w-full px-3 py-1.5 rounded transition-colors mt-1 ${
+            manualStep === null ? "bg-red-600 text-white shadow-inner" : "bg-white/10 hover:bg-white/20"
+          }`}
+        >
+          Reset / Auto
+        </button>
       </div>
     </div>
   );
