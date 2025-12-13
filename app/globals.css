@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand Colors */
+  --color-primary: #7ae1bf;
+  --color-secondary: #18332f;
+  --color-tertiary: #507f70;
+  --color-quaternary: #e6eeec;
+  --color-fi: #afeadc;
+
+  /* White Variations */
+  --color-white: #ffffff;
+  --color-white-2: #f2f2f7;
+  --color-white-3: #eeeeee;
+  --color-white-4: #e2e2e2;
+  --color-white-5: rgba(255, 255, 255, 0.64);
+  --color-white-6: rgba(255, 255, 255, 0.48);
+  --color-white-7: rgba(255, 255, 255, 0.32);
+  --color-white-8: rgba(255, 255, 255, 0.24);
+  --color-white-9: rgba(255, 255, 255, 0.12);
+  --color-white-10: rgba(255, 255, 255, 0);
+
+  /* Black Variations */
+  --color-black: #000000;
+  --color-black-2: rgba(0, 0, 0, 0.06);
+  --color-black-3: rgba(0, 0, 0, 0.12);
+  --color-black-4: rgba(0, 0, 0, 0.24);
+  --color-black-5: rgba(0, 0, 0, 0.32);
+  --color-black-6: rgba(0, 0, 0, 0.4);
+  --color-black-7: rgba(0, 0, 0, 0.48);
+  --color-black-8: rgba(0, 0, 0, 0.64);
+}
+
+/* keyframe for w 0 to 100 then  */
+
+@keyframes loadBar {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
