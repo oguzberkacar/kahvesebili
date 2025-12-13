@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Navbar from "./components/Navbar";
 
 export const metadata: Metadata = {
   title: "Kahve Makinesi",
@@ -13,7 +14,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr">
-      <body>{children}</body>
+      <body className="bg-quaternary">
+        <Navbar />
+        {children}
+      </body>
     </html>
   );
 }
