@@ -8,6 +8,7 @@ import TransitionRibbon from "../components/TransitionRibbon";
 import ArrowIcon from "../components/ArrowIcon";
 import Reserved from "../components/Reserved";
 import SplashOverlay from "../components/SplashOverlay";
+import Navbar from "../components/Navbar";
 
 export default function SiparisPage() {
   const [showSplash, setShowSplash] = React.useState(true);
@@ -17,6 +18,7 @@ export default function SiparisPage() {
       {showSplash && <SplashOverlay onFinish={() => setShowSplash(false)} />}
       <main className="min-h-screen w-full bg-white flex items-center justify-center p-8 overflow-auto">
         <div className="w-[800px] h-[1280px] relative bg-secondary text-white flex flex-col items-center justify-center shrink-0 border-4 border-gray-800 shadow-2xl">
+          <Navbar backgroundColor="bg-white-9" textColor="text-fi" />
           <div className="w-full h-full flex flex-col  items-center justify-center gap-[135px]">
             <KardoraBaseLogo />
             <OrderHereGraphic />

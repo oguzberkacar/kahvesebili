@@ -108,38 +108,67 @@ export default function OrderStationClient({ coffee, displayOrderId }: Props) {
     return () => clearTimeout(timeout);
   }, [isStarted, animationStep, isReady]);
 
+  // Data Mapping for UI
+  const origin = coffee.origin || coffee.details?.Region || "";
+  const flavor = coffee.flavor_notes || coffee.details?.["Flavor Notes"] || "";
+  const price = coffee.price || coffee.sizes?.medium?.price || coffee.sizes?.small?.price || 0;
+  const currencySymbol = coffee.currency?.symbol || "$";
+
+  let sizeOptions: string[] = coffee.size_options;
+  if (!sizeOptions && coffee.sizes) {
+    sizeOptions = [];
+    if (coffee.sizes.small) sizeOptions.push("S");
+    if (coffee.sizes.medium) sizeOptions.push("M");
+    if (coffee.sizes.large) sizeOptions.push("L");
+  } else if (!sizeOptions) {
+    sizeOptions = [];
+  }
+
   return (
     <div className="w-full h-screen bg-gray-100 flex items-center justify-center p-4">
       {/* Container Frame */}
       <div
-        className={`w-[600px] h-[1024px] relative flex flex-col items-center pt-8 overflow-hidden shadow-2xl font-sans transition-colors duration-700 ease-in-out ${
-          isStarted || isReady ? "bg-[#122824]" : "bg-[#65E5B4]"
+        className={`w-[600px] h-[1024px] relative flex flex-col items-center overflow-hidden shadow-2xl font-sans transition-all duration-700 ease-in-out ${
+          isStarted || isReady ? "bg-[#122824] pt-8" : "bg-[#65E5B4] pt-32"
         }`}
       >
         {!isReady ? (
           <>
             {/* Top Logo */}
             <div
-              className={`mb-6 scale-75 origin-top relative z-20 transition-all duration-500 ${
-                isStarted ? "opacity-0 h-0" : "opacity-100"
+              className={`absolute top-10 left-0 w-full flex justify-center scale-75 origin-top z-0 transition-all duration-700 ease-in-out ${
+                isStarted ? "opacity-0 translate-y-24" : "opacity-100 translate-y-0"
               }`}
             >
               <KardoraBaseLogo fillColor={isStarted ? "white" : "#1F3933"} />
             </div>
 
             {/* Info Card - Collapses on Start */}
+            {/* Info Card - Collapses on Start */}
             <div
               className={`bg-white rounded-[40px] px-8 flex flex-col items-center text-center shadow-sm z-10 transition-all duration-700 ease-in-out ${
-                isStarted ? "w-[480px] py-0 h-0 opacity-0 overflow-hidden" : "w-[520px] py-8 gap-2 opacity-100"
+                isStarted ? "w-[400px] py-4 gap-0" : "w-[520px] py-8 gap-2"
               }`}
             >
-              <h1 className="text-[40px] font-bold text-secondary transition-all">{coffee.name}</h1>
-              <div className="overflow-hidden w-full">
+              <h1
+                className={`font-bold text-secondary transition-all duration-700 ${isStarted ? "text-2xl" : "text-[40px]"}`}
+              >
+                {coffee.name}
+              </h1>
+
+              <div
+                className={`overflow-hidden w-full transition-all duration-700 ease-in-out ${
+                  isStarted ? "max-h-0 opacity-0 mt-0" : "max-h-[500px] opacity-100 mt-2"
+                }`}
+              >
                 <div className="flex justify-between items-start mb-2 mt-4">
                   <div className="text-left">
-                    <p className="text-secondary/60 text-lg font-medium">Origin: {coffee.origin}</p>
+                    <p className="text-secondary/60 text-lg font-medium">Origin: {origin}</p>
                   </div>
-                  <span className="text-4xl font-black text-primary">${coffee.price}</span>
+                  <span className="text-4xl font-black text-primary">
+                    {currencySymbol}
+                    {price}
+                  </span>
                 </div>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-4 mt-2 text-left">
                   <div>
@@ -148,12 +177,12 @@ export default function OrderStationClient({ coffee, displayOrderId }: Props) {
                   </div>
                   <div>
                     <h3 className="text-secondary/40 font-bold text-sm tracking-wider mb-1">FLAVOR</h3>
-                    <p className="text-secondary font-bold text-lg">{coffee.flavor_notes}</p>
+                    <p className="text-secondary font-bold text-lg">{flavor}</p>
                   </div>
                   <div>
                     <h3 className="text-secondary/40 font-bold text-sm tracking-wider mb-1">SIZE</h3>
                     <div className="flex gap-2">
-                      {coffee.size_options?.map((size: string) => (
+                      {sizeOptions.map((size: string) => (
                         <span
                           key={size}
                           className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 ${
@@ -169,7 +198,9 @@ export default function OrderStationClient({ coffee, displayOrderId }: Props) {
                   </div>
                   <div>
                     <h3 className="text-secondary/40 font-bold text-sm tracking-wider mb-1">TOTAL</h3>
-                    <p className="text-secondary font-bold text-lg">$ {coffee.price}</p>
+                    <p className="text-secondary font-bold text-lg">
+                      {currencySymbol} {price}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -191,7 +222,7 @@ export default function OrderStationClient({ coffee, displayOrderId }: Props) {
               ) : (
                 <>
                   <span className="bg-white rounded-full px-6 py-2 text-xl font-black text-secondary">ORDER</span>
-                  <span className="text-xl font-bold text-secondary">{displayOrderId}</span>
+                  <span className="text-xl font-bold text-secondary pr-6">{displayOrderId}</span>
                 </>
               )}
             </div>

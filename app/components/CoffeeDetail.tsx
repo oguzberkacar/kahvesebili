@@ -26,6 +26,7 @@ interface CoffeeType {
     "Flavor Notes": string;
   };
   sizes: Sizes;
+  currency?: { symbol: string; code: string };
 }
 
 interface Props {
@@ -42,6 +43,7 @@ export default function CoffeeDetail({ coffee, onBack }: Props) {
   const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
   const router = useRouter();
+  const currencySymbol = coffee.currency?.symbol ?? "$";
 
   // Payment Simulation Effect
   useEffect(() => {
@@ -249,7 +251,10 @@ export default function CoffeeDetail({ coffee, onBack }: Props) {
 
               <p className="text-xs text-secondary/70 font-medium leading-relaxed">{coffee.description}</p>
 
-              <div className="text-4xl font-black text-secondary mt-2">${coffee.sizes[selectedSize].price.toFixed(2)}</div>
+              <div className="text-4xl font-black text-secondary mt-2">
+                {currencySymbol}
+                {coffee.sizes[selectedSize].price.toFixed(2)}
+              </div>
             </div>
 
             {/* Default View Description */}
@@ -295,7 +300,10 @@ export default function CoffeeDetail({ coffee, onBack }: Props) {
             {showDetails ? "Close Detail" : "View Detail"}
           </button>
           {!isPaymentView && (
-            <span className="text-4xl font-bold text-secondary mb-4">{coffee.sizes[selectedSize].price.toFixed(2)}₺</span>
+            <span className="text-4xl font-bold text-secondary mb-4">
+              {currencySymbol}
+              {coffee.sizes[selectedSize].price.toFixed(2)}
+            </span>
           )}
         </div>
 

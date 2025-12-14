@@ -14,10 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr">
-      <body className="bg-quaternary">
-        <Navbar />
-        {children}
-      </body>
+      <body className="bg-quaternary">{children}</body>
     </html>
   );
 }

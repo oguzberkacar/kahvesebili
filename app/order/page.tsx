@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import coffees from "../data/coffees.json";
 import CoffeeCard from "../components/CoffeeCard";
 import CoffeeDetail from "../components/CoffeeDetail";
+import Navbar from "../components/Navbar";
 
 export interface Sizes {
   small: { price: number; volume: string };
@@ -55,6 +56,7 @@ export default function OrderPage() {
         <div className="w-1/2 h-full flex flex-col items-center overflow-y-auto">
           {/* Content Grid */}
           <div className="w-full max-w-[800px] px-6 pb-24 pt-8">
+            <Navbar backgroundColor="bg-white-9" textColor="text-fi" />
             <div className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-2">
               {coffees.map((coffee) => (
                 <div key={coffee.id} onClick={() => handleCoffeeClick(coffee as Coffee)}>

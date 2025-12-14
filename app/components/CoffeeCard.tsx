@@ -23,6 +23,7 @@ interface Coffee {
     "Flavor Notes": string;
   };
   sizes: Sizes;
+  currency?: { symbol: string; code: string };
 }
 
 interface CoffeeCardProps {
@@ -32,6 +33,7 @@ interface CoffeeCardProps {
 export default function CoffeeCard({ coffee }: CoffeeCardProps) {
   // Use the minimum price from sizes as the displayed price based on the design pattern "from $X"
   const startPrice = coffee.sizes.small.price;
+  const currencySymbol = coffee.currency?.symbol ?? "$";
 
   return (
     <div className="w-full bg-white rounded-[24px] w-[360px] p-3 pb-6 flex flex-col items-center gap-4 relative active:scale-90 transition-transform duration-200 cursor-pointer">
@@ -59,7 +61,10 @@ export default function CoffeeCard({ coffee }: CoffeeCardProps) {
         {/* Title */}
         <div className="flex items-center  justify-between font-extrabold text-secondary text-2xl w-full gap-2">
           <h3 className="truncate">{coffee.name}</h3>
-          <span className="">₺{startPrice}</span>
+          <span className="">
+            {currencySymbol}
+            {startPrice}
+          </span>
         </div>
 
         {/* Short Description (Optional, maybe not on card grid but useful) */}

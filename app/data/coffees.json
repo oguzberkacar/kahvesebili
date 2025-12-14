@@ -4,6 +4,7 @@
         "stationId": 1,
         "name": "Ethiopia",
         "isActive": false,
+        "currency": { "symbol": "₺", "code": "TRY" },
         "image": "/cups/cold/cup1.png",
         "imageRaw": "/cups/cold/cup1_raw.png",
         "tags": [
@@ -38,6 +39,7 @@
         "stationId": 4,
         "name": "Colombia",
         "isActive": true,
+        "currency": { "symbol": "₺", "code": "TRY" },
         "image": "/cups/hot/cup2.png",
         "imageRaw": "/cups/hot/cup2_raw.png",
         "tags": [
@@ -72,6 +74,7 @@
         "stationId": 7,
         "name": "Brasil",
         "isActive": true,
+        "currency": { "symbol": "₺", "code": "TRY" },
         "image": "/cups/hot/cup1.png",
         "imageRaw": "/cups/hot/cup1_raw.png",
         "tags": [
@@ -106,6 +109,7 @@
         "stationId": 2,
         "name": "Guatemala",
         "isActive": true,
+        "currency": { "symbol": "₺", "code": "TRY" },
         "image": "/cups/cold/cup2.png",
         "imageRaw": "/cups/cold/cup2_raw.png",
         "tags": [
@@ -140,6 +144,7 @@
         "stationId": 9,
         "name": "Costa Rica",
         "isActive": true,
+        "currency": { "symbol": "₺", "code": "TRY" },
         "image": "/cups/hot/cup2.png",
         "imageRaw": "/cups/hot/cup2_raw.png",
         "tags": [
@@ -174,6 +179,7 @@
         "stationId": 5,
         "name": "Kenya",
         "isActive": true,
+        "currency": { "symbol": "₺", "code": "TRY" },
         "image": "/cups/cold/cup1.png",
         "imageRaw": "/cups/cold/cup1_raw.png",
         "tags": [
@@ -208,6 +214,7 @@
         "stationId": 8,
         "name": "Indonesia",
         "isActive": true,
+        "currency": { "symbol": "₺", "code": "TRY" },
         "image": "/cups/hot/cup1.png",
         "imageRaw": "/cups/hot/cup1_raw.png",
         "tags": [
@@ -242,6 +249,7 @@
         "stationId": 3,
         "name": "Vietnam",
         "isActive": true,
+        "currency": { "symbol": "₺", "code": "TRY" },
         "image": "/cups/cold/cup2.png",
         "imageRaw": "/cups/cold/cup2_raw.png",
         "tags": [
@@ -276,6 +284,7 @@
         "stationId": 6,
         "name": "Jamaica",
         "isActive": true,
+        "currency": { "symbol": "₺", "code": "TRY" },
         "image": "/cups/hot/cup2.png",
         "imageRaw": "/cups/hot/cup2_raw.png",
         "tags": [
@@ -310,6 +319,7 @@
         "stationId": 10,
         "name": "Honduras",
         "isActive": true,
+        "currency": { "symbol": "₺", "code": "TRY" },
         "image": "/cups/hot/cup1.png",
         "imageRaw": "/cups/hot/cup1_raw.png",
         "tags": [
