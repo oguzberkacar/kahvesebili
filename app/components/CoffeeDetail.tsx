@@ -152,12 +152,12 @@ export default function CoffeeDetail({ coffee, onBack }: Props) {
   }
 
   return (
-    <div className="w-full h-full flex flex-col pt-[142px] px-[100px] pb-[100px] justify-between items-center bg-quaternary text-secondary overflow-hidden font-sans">
+    <div className="w-full h-full flex flex-col py-[50px] px-[100px] justify-between items-center bg-quaternary text-secondary overflow-hidden font-sans">
       {/* Header */}
 
       {isPaymentView && <div className="font-bold text-xl">Order Summary</div>}
 
-      <div className="flex flex-col items-center w-full  relative justify-center">
+      <div className="flex flex-col items-center w-full  relative justify-start pt-[112px] h-full">
         {/* SECTION 1: Top Content (Image + Title) */}
         <div
           className={`w-full flex transition-all duration-700 ease-in-out ${
@@ -180,8 +180,8 @@ export default function CoffeeDetail({ coffee, onBack }: Props) {
                 : selectedSize === "small"
                 ? "300px"
                 : selectedSize === "medium"
-                ? "360px"
-                : "420px",
+                ? "325px"
+                : "350px",
             }}
           >
             <Image src={coffee.imageRaw} alt={coffee.name} fill className="object-contain" priority />
@@ -254,7 +254,7 @@ export default function CoffeeDetail({ coffee, onBack }: Props) {
 
         {/* Accordion + View Detail Button (Hidden in Payment View) */}
         <div
-          className={`w-full flex flex-col items-center transition-all duration-500 ease-in-out px-6 ${
+          className={`w-full flex mt-8 flex-col items-center transition-all duration-500 ease-in-out px-6 ${
             isPaymentView ? "opacity-0 max-h-0 overflow-hidden" : "opacity-100 max-h-[600px]"
           }`}
         >
@@ -264,13 +264,16 @@ export default function CoffeeDetail({ coffee, onBack }: Props) {
             }`}
           >
             {/* Roast Label */}
-            <div className="mb-4 font-bold text-secondary text-center">{coffee.roast}</div>
+            <div className="mb-4 text-center font-extrabold text-[24px] leading-[32px] text-secondary truncate">
+              {coffee.roast}
+            </div>
             {/* Details Grid */}
-            <div className="space-y-4 text-sm">
+            <div className="flex flex-col gap-[56px] text-center">
               {Object.entries(coffee.details).map(([key, value]) => (
                 <div key={key} className="flex flex-col gap-1">
-                  <span className="font-extrabold text-secondary">
-                    {key}: <span className="font-medium text-secondary/80">{value}</span>
+                  <span className="text-[24px] leading-[32px] text-secondary">
+                    <span className="font-extrabold">{key}: </span>
+                    <span className="font-bold">{value}</span>
                   </span>
                 </div>
               ))}
@@ -281,18 +284,36 @@ export default function CoffeeDetail({ coffee, onBack }: Props) {
             onClick={() => setShowDetails(!showDetails)}
             className="rounded-full bg-[rgba(0,0,0,0.06)] flex justify-center items-center px-8 py-[18px] text-secondary font-sans text-[24px] font-extrabold leading-[24px] truncate transition-colors hover:bg-black/10 mt-4"
           >
-            {showDetails ? "Close Detail" : "View Detail"}
+            {showDetails ? "Back" : "View Detail"}
           </button>
-          {!isPaymentView && (
-            <div className="text-[81px] font-extrabold  text-secondary font-sans overflow-hidden whitespace-nowrap text-ellipsis mb-4 text-center">
-              {currencySymbol}
-              {coffee.sizes[selectedSize].price.toFixed(2)}
-            </div>
-          )}
         </div>
 
         {/* SECTION 2: Bottom Slider Container */}
-        <div className="w-full overflow-hidden pb-8 mt-4">
+        <div
+          className="w-full overflow-hidden pb-8 mt-4 flex flex-col justify-end absolute bottom-0 left-0 z-50 transition-transform duration-500 ease-in-out"
+          style={{
+            transform: showDetails ? "translateY(120%)" : "translateY(0%)",
+          }}
+        >
+          {!isPaymentView && (
+            <div className="flex justify-center items-center mb-4 text-[81px] font-extrabold leading-[48px] text-secondary font-sans">
+              <span className="mr-4">{currencySymbol}</span>
+              <div className="h-[96px] overflow-hidden relative">
+                <div
+                  className="flex flex-col transition-transform duration-500 ease-in-out"
+                  style={{
+                    transform: `translateY(-${(["small", "medium", "large"] as const).indexOf(selectedSize) * 96}px)`,
+                  }}
+                >
+                  {(["small", "medium", "large"] as const).map((s) => (
+                    <div key={s} className="h-[96px] flex items-center justify-start">
+                      {coffee.sizes[s].price.toFixed(2)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
           <div
             className="flex w-[200%] transition-transform duration-700 ease-spring"
             style={{
@@ -300,9 +321,9 @@ export default function CoffeeDetail({ coffee, onBack }: Props) {
             }}
           >
             {/* Slide 1: Size & Payment Button */}
-            <div className="w-[600px] flex flex-col items-center justify-end ">
+            <div className="w-[600px] flex flex-col items-center mt-8 justify-end ">
               {/* Size Selection */}
-              <div className="w-[600px] bg-[#E9E9E9] rounded-full flex items-center relative mb-4">
+              <div className="w-[600px] bg-[#E9E9E9] rounded-full flex items-center relative mb-8">
                 <div
                   className="absolute top-0 bottom-0 bg-[#1F3933] rounded-full transition-transform duration-300 ease-out z-0 shadow-sm"
                   style={{
