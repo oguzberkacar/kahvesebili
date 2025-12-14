@@ -152,30 +152,12 @@ export default function CoffeeDetail({ coffee, onBack }: Props) {
   }
 
   return (
-    <div className="w-full h-full min-h-screen flex flex-col bg-quaternary text-secondary overflow-hidden font-sans">
+    <div className="w-full h-full flex flex-col pt-[142px] px-[100px] pb-[100px] justify-between items-center bg-quaternary text-secondary overflow-hidden font-sans">
       {/* Header */}
-      <div className="flex items-center justify-between p-6 z-10">
-        <button
-          onClick={handleBack}
-          className="w-10 h-10 bg-black/5 rounded-full flex items-center justify-center hover:bg-black/10 transition-colors"
-        >
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            className="text-secondary"
-          >
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-        </button>
-        {isPaymentView && <div className="font-bold text-xl">Order Summary</div>}
-        <div className="w-10" /> {/* Spacer for centering if needed */}
-      </div>
 
-      <div className="flex flex-col items-center w-full max-w-md mx-auto relative justify-center">
+      {isPaymentView && <div className="font-bold text-xl">Order Summary</div>}
+
+      <div className="flex flex-col items-center w-full  relative justify-center">
         {/* SECTION 1: Top Content (Image + Title) */}
         <div
           className={`w-full flex transition-all duration-700 ease-in-out ${
@@ -212,13 +194,13 @@ export default function CoffeeDetail({ coffee, onBack }: Props) {
             }`}
           >
             <div className={`flex items-center gap-3 ${isPaymentView ? "mb-1" : "mb-2"}`}>
-              <h1 className="text-3xl font-extrabold text-secondary">{coffee.name}</h1>
+              <h1 className="text-[40px] font-extrabold text-secondary">{coffee.name}</h1>
               {/* Tags inside title line logic */}
               {!isPaymentView &&
                 coffee.tags.map((tag) => (
                   <span
                     key={tag}
-                    className={`px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider
+                    className={`px-2 py-0.5 rounded-md text-[17px] leading-[24px] font-bold uppercase tracking-wider
                       ${tag === "Cold" ? "bg-fi text-secondary" : "bg-orange-100 text-orange-800"}
                       `}
                   >
@@ -263,7 +245,9 @@ export default function CoffeeDetail({ coffee, onBack }: Props) {
                 !isPaymentView ? "opacity-100 max-h-40" : "opacity-0 max-h-0"
               }`}
             >
-              <p className="text-center text-secondary/70 max-w-xs font-medium mx-auto">{coffee.description}</p>
+              <p className="text-center font-sans text-[24px] font-semibold leading-[32px] text-secondary mx-auto">
+                {coffee.description}
+              </p>
             </div>
           </div>
         </div>
@@ -295,20 +279,20 @@ export default function CoffeeDetail({ coffee, onBack }: Props) {
 
           <button
             onClick={() => setShowDetails(!showDetails)}
-            className="bg-[#E2E2E2] px-8 py-3 rounded-full text-secondary font-bold text-lg mb-4 transition-colors hover:bg-gray-300 mt-4"
+            className="rounded-full bg-[rgba(0,0,0,0.06)] flex justify-center items-center px-8 py-[18px] text-secondary font-sans text-[24px] font-extrabold leading-[24px] truncate transition-colors hover:bg-black/10 mt-4"
           >
             {showDetails ? "Close Detail" : "View Detail"}
           </button>
           {!isPaymentView && (
-            <span className="text-4xl font-bold text-secondary mb-4">
+            <div className="text-[81px] font-extrabold  text-secondary font-sans overflow-hidden whitespace-nowrap text-ellipsis mb-4 text-center">
               {currencySymbol}
               {coffee.sizes[selectedSize].price.toFixed(2)}
-            </span>
+            </div>
           )}
         </div>
 
         {/* SECTION 2: Bottom Slider Container */}
-        <div className="w-full overflow-hidden pb-8 px-6 mt-4">
+        <div className="w-full overflow-hidden pb-8 mt-4">
           <div
             className="flex w-[200%] transition-transform duration-700 ease-spring"
             style={{
@@ -316,14 +300,14 @@ export default function CoffeeDetail({ coffee, onBack }: Props) {
             }}
           >
             {/* Slide 1: Size & Payment Button */}
-            <div className="w-1/2 flex flex-col items-center justify-end px-2">
+            <div className="w-[600px] flex flex-col items-center justify-end ">
               {/* Size Selection */}
-              <div className="w-full max-w-xs bg-[#E9E9E9] rounded-full p-1.5 flex relative mb-4">
+              <div className="w-[600px] bg-[#E9E9E9] rounded-full flex items-center relative mb-4">
                 <div
-                  className="absolute top-1.5 bottom-1.5 bg-[#1F3933] rounded-full transition-transform duration-300 ease-out z-0 shadow-sm"
+                  className="absolute top-0 bottom-0 bg-[#1F3933] rounded-full transition-transform duration-300 ease-out z-0 shadow-sm"
                   style={{
-                    width: "calc((100% - 12px) / 3)",
-                    left: "6px",
+                    width: "calc(100% / 3)",
+                    left: "0",
                     transform: `translateX(${
                       selectedSize === "small" ? "0%" : selectedSize === "medium" ? "100%" : "200%"
                     })`,
@@ -333,8 +317,8 @@ export default function CoffeeDetail({ coffee, onBack }: Props) {
                   <button
                     key={size}
                     onClick={() => setSelectedSize(size)}
-                    className={`flex-1 relative z-10 text-center py-3 font-bold text-sm transition-colors duration-300 capitalize ${
-                      selectedSize === size ? "text-white" : "text-[#8E8E8E]"
+                    className={`flex-1 relative z-10 text-center py-[36px] font-extrabold text-[24px] leading-[24px] transition-colors duration-300 capitalize ${
+                      selectedSize === size ? "text-white" : "text-black/40"
                     }`}
                   >
                     {size}
@@ -344,7 +328,7 @@ export default function CoffeeDetail({ coffee, onBack }: Props) {
 
               <button
                 onClick={handlePaymentClick}
-                className="w-full max-w-xs bg-[#65E5B4] text-[#1F3933] font-black text-2xl py-4 rounded-[32px] shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
+                className="w-full h-[120px] bg-[#65E5B4] text-[#1F3933] font-black text-[32px] rounded-full shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
               >
                 <span>Payment</span>
               </button>
