@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
-  const pin = body.pin || 14;
-  const duration = body.duration || 10000; // 10 seconds default
+  const pin = parseInt(body.pin || 14);
+  const duration = parseInt(body.duration || 10000);
 
   console.log(`[GPIO] Request to trigger Pin ${pin} for ${duration}ms`);
 
