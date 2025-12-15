@@ -11,7 +11,7 @@ type Props = {
 type Particle = {
   id: number;
   x: number; // 0-100% position
-  IconComp: React.FC<any>;
+  IconComp: React.FC<{ className?: string; fill?: string }>;
   duration: number; // 3-5s
   delay: number; // 0s initiate
 };

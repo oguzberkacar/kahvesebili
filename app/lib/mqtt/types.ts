@@ -6,13 +6,7 @@ export type DeviceRole = "master" | "station";
 
 export type ProtocolVersion = 3 | 4 | 5;
 
-export type ConnectionState =
-  | "idle"
-  | "connecting"
-  | "connected"
-  | "reconnecting"
-  | "closed"
-  | "error";
+export type ConnectionState = "idle" | "connecting" | "connected" | "reconnecting" | "closed" | "error";
 
 export type MqttCredentials = {
   username?: string;
@@ -77,6 +71,14 @@ export type CommandMessage = {
   ts: number;
 };
 
+export type GpioCommandMessage = {
+  type: "gpio_pulse";
+  deviceId: string;
+  pins: number[];
+  durationSec: number;
+  ts: number;
+};
+
 export type EventMessage = {
   deviceId: string;
   orderId?: string;
@@ -90,6 +92,7 @@ export type ParsedMqttMessage =
   | HelloMessage
   | StatusMessage
   | CommandMessage
+  | GpioCommandMessage
   | EventMessage
   | Record<string, unknown>
   | string;

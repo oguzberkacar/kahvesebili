@@ -15,6 +15,7 @@ export interface Coffee {
   id: string;
   name: string;
   image: string;
+  imageRaw: string;
   tags: string[];
   description: string;
   roast: string;
@@ -26,11 +27,14 @@ export interface Coffee {
     "Flavor Notes": string;
   };
   sizes: Sizes;
+  currency?: { symbol: string; code: string };
 }
 
 export default function OrderPage() {
   const [selectedCoffee, setSelectedCoffee] = useState<Coffee | null>(null);
   const [activeView, setActiveView] = useState<"list" | "detail">("list");
+  const [isPaymentView, setIsPaymentView] = useState(false);
+  const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
 
   const handleCoffeeClick = (coffee: Coffee) => {
     setSelectedCoffee(coffee);
@@ -38,7 +42,16 @@ export default function OrderPage() {
   };
 
   const handleBack = () => {
+    if (isPaymentView) {
+      setIsPaymentView(false);
+      return;
+    }
+    if (isPaymentView) {
+      setIsPaymentView(false);
+      return;
+    }
     setActiveView("list");
+    setIsPaymentSuccess(false);
     // Optional: Clear selection after animation
     setTimeout(() => {
       setSelectedCoffee(null);
@@ -52,8 +65,8 @@ export default function OrderPage() {
         <Navbar
           backgroundColor="bg-black-2"
           textColor="text-black"
-          blur
-          showBackButton={activeView === "detail"}
+          blur={activeView === "list"}
+          showBackButton={activeView === "detail" && !isPaymentSuccess}
           onBack={handleBack}
         />
         <div
@@ -82,7 +95,14 @@ export default function OrderPage() {
           {/* DETAIL VIEW (Right Half) */}
           <div className="w-1/2 h-full bg-quaternary">
             {selectedCoffee ? (
-              <CoffeeDetail coffee={selectedCoffee as any} onBack={handleBack} />
+              <CoffeeDetail
+                coffee={selectedCoffee}
+                onBack={handleBack}
+                isPaymentView={isPaymentView}
+                setIsPaymentView={setIsPaymentView}
+                isPaymentSuccess={isPaymentSuccess}
+                setIsPaymentSuccess={setIsPaymentSuccess}
+              />
             ) : (
               <div className="w-full h-full flex items-center justify-center">Loading...</div>
             )}

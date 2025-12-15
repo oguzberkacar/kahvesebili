@@ -1,6 +1,5 @@
 import React from "react";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import coffees from "../../data/coffees.json";
 import KardoraBaseLogo from "../../components/KardoraBaseLogo";
 

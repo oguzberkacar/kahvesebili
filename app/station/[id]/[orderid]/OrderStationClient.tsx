@@ -9,8 +9,30 @@ import LiquidSvg from "../../../components/LiquidSvg";
 import { Pause, Check } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 
+type Coffee = {
+  name: string;
+  origin?: string;
+  flavor_notes?: string;
+  price?: number;
+  roast: string;
+  tags?: string[];
+  size_options?: string[];
+  details?: {
+    Region?: string;
+    "Flavor Notes"?: string;
+  };
+  sizes?: {
+    small?: { price: number };
+    medium?: { price: number };
+    large?: { price: number };
+  };
+  currency?: {
+    symbol: string;
+  };
+};
+
 type Props = {
-  coffee: any;
+  coffee: Coffee;
   displayOrderId: string;
 };
 
@@ -114,14 +136,12 @@ export default function OrderStationClient({ coffee, displayOrderId }: Props) {
   const price = coffee.price || coffee.sizes?.medium?.price || coffee.sizes?.small?.price || 0;
   const currencySymbol = coffee.currency?.symbol || "$";
 
-  let sizeOptions: string[] = coffee.size_options;
-  if (!sizeOptions && coffee.sizes) {
+  let sizeOptions: string[] = coffee.size_options || [];
+  if (!coffee.size_options && coffee.sizes) {
     sizeOptions = [];
     if (coffee.sizes.small) sizeOptions.push("S");
     if (coffee.sizes.medium) sizeOptions.push("M");
     if (coffee.sizes.large) sizeOptions.push("L");
-  } else if (!sizeOptions) {
-    sizeOptions = [];
   }
 
   return (

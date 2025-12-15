@@ -24,6 +24,30 @@ export default function Home() {
       >
         Sipariş
       </Link>
+      <Link
+        href="/station/guatemala/biriyasinisevsin"
+        className="px-8 py-3 bg-white text-black font-semibold rounded-full hover:bg-gray-200 transition-colors"
+      >
+        test order
+      </Link>
+      <Link
+        href="/station/guatemala"
+        className="px-8 py-3 bg-white text-black font-semibold rounded-full hover:bg-gray-200 transition-colors"
+      >
+        idle
+      </Link>
+      <Link
+        href="/station/ethiopia"
+        className="px-8 py-3 bg-white text-black font-semibold rounded-full hover:bg-gray-200 transition-colors"
+      >
+        not active
+      </Link>
+      <Link
+        href="/pin"
+        className="px-8 py-3 bg-red-600 text-white font-semibold rounded-full hover:bg-red-700 transition-colors"
+      >
+        GPIO /pin
+      </Link>
     </main>
   );
 }
