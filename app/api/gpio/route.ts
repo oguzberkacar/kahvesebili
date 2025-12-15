@@ -82,8 +82,19 @@ export async function POST(request: Request) {
         }
       }
 
+      // 5. Fallback: Python script (Best for RPi 5)
       if (methodUsed === "none") {
-        throw new Error("All GPIO methods failed (onoff, pinctrl, gpio, gpioset). Check hardware/permissions.");
+        console.log(`[GPIO] Trying 'python3' fallback...`);
+        // Assumes scripts/trigger.py exists in project root
+        const success = await runCommand(`python3 scripts/trigger.py ${pin} ${duration}`);
+        if (success) {
+          methodUsed = "python";
+          // Python script handles the timeout/sleep internally, so we assume done.
+        }
+      }
+
+      if (methodUsed === "none") {
+        throw new Error("All GPIO methods failed (onoff, pinctrl, gpio, gpioset, python). Check hardware/permissions.");
       }
 
       return NextResponse.json({ success: true, message: `Pin ${pin} triggered via ${methodUsed}` });
