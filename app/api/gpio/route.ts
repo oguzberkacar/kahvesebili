@@ -11,9 +11,12 @@ export async function POST(request: Request) {
   // You need to install 'onoff' package: npm install onoff
   try {
     if (process.platform === "linux") {
-      // Dynamic require to prevent crashes on Mac during build/dev if 'onoff' is missing or incompatible
+      // Use eval('require') to separate 'onoff' from Webpack build process.
+      // This prevents "Module not found" errors on Development machines (Mac/Windows)
+      // where 'onoff' is not installed.
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { Gpio } = require("onoff");
+      const onoff = eval("require")("onoff"); // Dynamic import for runtime only
+      const Gpio = onoff.Gpio;
 
       if (Gpio.accessible) {
         const gpioPin = new Gpio(pin, "out");

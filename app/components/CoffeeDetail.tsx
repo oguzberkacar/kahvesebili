@@ -58,26 +58,20 @@ export default function CoffeeDetail({
   const currencySymbol = coffee.currency?.symbol ?? "$";
 
   // Payment Simulation Effect
+  // Payment Simulation Effect
   useEffect(() => {
-    let timeout: NodeJS.Timeout;
+    let timer: NodeJS.Timeout;
     if (isWaitingPayment) {
-      // Random duration between 5000ms (5s) and 10000ms (10s)
-      const duration = Math.floor(Math.random() * 5000) + 5000;
-      timeout = setTimeout(() => {
-        // Generate Order ID
-        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        const r1 = letters.charAt(Math.floor(Math.random() * letters.length));
-        const r2 = letters.charAt(Math.floor(Math.random() * letters.length));
-        const nums = Math.floor(Math.random() * 900000) + 100000;
-        setOrderNumber(`#${r1}${r2}${nums}`);
-
+      timer = setTimeout(() => {
         setIsWaitingPayment(false);
-        setWaitingMethod(null);
         setIsPaymentSuccess(true);
-      }, duration);
+        setOrderNumber("#FG" + Math.floor(Math.random() * 89999 + 10000));
+      }, 3000);
     }
-    return () => clearTimeout(timeout);
-  }, [isWaitingPayment]);
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [isWaitingPayment, setIsPaymentSuccess]);
 
   const handlePaymentClick = () => {
     setIsPaymentView(true);
