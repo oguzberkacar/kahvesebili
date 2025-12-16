@@ -1,12 +1,46 @@
 "use client";
 
+import { useEffect, useCallback, useState } from "react";
+import { useMqttClient } from "../lib/mqtt/useMqttClient";
+import { mqttTopics } from "../lib/mqtt/topics";
+import type { IncomingMessage } from "../lib/mqtt/types";
+import { getMqttConfigFromEnv } from "../lib/mqtt/config";
+import coffees from "../data/coffees.json";
+
+export function useMasterController() {
+  const envConfig = getMqttConfigFromEnv();
+
   // Track connected stations
   const [activeStations, setActiveStations] = useState<Set<string>>(new Set());
 
-  // ... (useMqttClient call remains same) ...
+  const {
+    client,
+    state: connectionState,
+    subscribe,
+    publish,
+    messages,
+  } = useMqttClient({
+    ...envConfig,
+    role: "master", // Enforce role
+    clientId: "master-screen",
+  });
 
-  // Handle Incoming Messages
-  // ... (useEffect remains same)
+  // Subscribe to all stations
+  useEffect(() => {
+    if (connectionState === "connected") {
+      subscribe([
+        { topic: mqttTopics.master.helloAll, qos: 0 },
+        { topic: mqttTopics.master.eventsAll, qos: 0 },
+      ]);
+    }
+  }, [connectionState, subscribe]);
+
+  // Handle Incoming Messages (Hello, Events)
+  useEffect(() => {
+    if (messages.length === 0) return;
+    const lastMsg = messages[messages.length - 1];
+    handleMessage(lastMsg);
+  }, [messages]);
 
   const handleMessage = useCallback(
     (msg: IncomingMessage) => {
@@ -20,32 +54,30 @@
           if (!stationId) return;
 
           console.log("Master received hello from:", stationId);
-          
+
           // Mark as active
           setActiveStations((prev) => {
-             const next = new Set(prev);
-             next.add(stationId);
-             return next;
+            const next = new Set(prev);
+            next.add(stationId);
+            return next;
           });
 
-          // ... (rest of logic: find coffee, publish config) ...
-          
+          // Find Coffee for this station
           let coffee = null;
-          // Try parsing number
+          // Try parsing number for coffees.json lookup
           const numericId = parseInt(stationId.replace("station", ""), 10);
-          console.log("Parsed numeric ID:", numericId);
 
           if (!isNaN(numericId)) {
             coffee = coffees.find((c) => c.stationId === numericId);
           } else {
-            // Fallback or exact match if string IDs used later
+            // Fallback
             coffee = coffees.find((c) => String(c.stationId) === stationId);
           }
 
           if (coffee) {
             console.log(`Configuring ${stationId} with ${coffee.name}`);
             // Send Config
-            const topic = mqttTopics.station(stationId).command; 
+            const topic = mqttTopics.station(stationId).command;
             publish({
               topic,
               payload: {
@@ -59,19 +91,52 @@
             console.warn("No coffee found for stationId:", stationId);
           }
         }
-        
-        // ... (rest of Start Request logic) ...
-         if (payload.type === "start_request") {
-          // ... 
-         }
 
+        // 2. Start Request -> Trigger GPIO
+        if (payload.type === "start_request") {
+          const { deviceId, orderId } = payload;
+          console.log(`Start request from ${deviceId} for order ${orderId}`);
+
+          const numericId = parseInt(deviceId.replace("station", ""), 10);
+          const coffee = coffees.find((c) => c.stationId === numericId);
+
+          if (coffee && coffee.pin) {
+            // 2a. Acknowledge Start (Processing)
+            publish({
+              topic: mqttTopics.station(deviceId).status,
+              payload: { status: "processing", deviceId, ts: Date.now() },
+            });
+
+            // 2b. Trigger GPIO API
+            fetch("/api/gpio", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ pin: coffee.pin }),
+            })
+              .then(async (res) => {
+                if (res.ok) {
+                  console.log("GPIO Triggered");
+                  // 2c. Wait for duration (e.g. 10s as requested)
+                  setTimeout(() => {
+                    publish({
+                      topic: mqttTopics.station(deviceId).status,
+                      payload: { status: "completed", deviceId, ts: Date.now() },
+                    });
+                  }, 10000); // 10 seconds
+                } else {
+                  console.error("GPIO Failed");
+                }
+              })
+              .catch((err) => console.error("GPIO Call Error", err));
+          }
+        }
       } catch (e) {
         console.error("Master Handle Error", e);
       }
     },
     [publish]
   );
-  
+
   // Public Actions
   const sendOrder = useCallback(
     (stationId: string, orderDetails: any) => {
@@ -92,6 +157,6 @@
   return {
     connectionState,
     sendOrder,
-    activeStations: Array.from(activeStations), // Return as Array for easier consumption
+    activeStations: Array.from(activeStations),
   };
 }
