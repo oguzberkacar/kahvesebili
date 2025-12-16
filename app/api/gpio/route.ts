@@ -72,10 +72,11 @@ export async function POST(request: Request) {
     }
 
     // ✅ 0) Hold HIGH (no timer) if requested
+    // -t 0s ile hemen set edip çıkması sağlanır
     if (hold && value === 1) {
       await execFileAsync(
         "gpioset",
-        ["-c", CHIP, "-m", "exit", `${pin}=1`],
+        ["-c", CHIP, "-t", "0s", `${pin}=1`],
         { timeout: 3000 }
       );
 
@@ -91,11 +92,11 @@ export async function POST(request: Request) {
     }
 
     // ✅ 1) Eğer value=0 istenmişse: direkt LOW (no timer)
-    // gpioset komutu process boyunca tutar; ama LOW için hızlıca uygular ve çıkar.
+    // -t 0s,0 ile hemen set edip çıkması sağlanır
     if (value === 0) {
       await execFileAsync(
         "gpioset",
-        ["-c", CHIP, `${pin}=0`],
+        ["-c", CHIP, "-t", "0s", `${pin}=0`],
         { timeout: 3000 }
       );
 
