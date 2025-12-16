@@ -75,10 +75,12 @@ export default function CoffeeDetail({
         // Send Order to Station via MQTT
         // Assuming stationId mapping: 1 -> "station1"
         const targetStationId = `station${coffee.stationId}`;
+        const price = coffee.sizes[selectedSize]?.price || 0;
         sendOrder(targetStationId, {
           orderId: newOrderNumber,
           size: selectedSize,
           recipeId: coffee.id,
+          price: price,
         });
       }, 3000);
     }

@@ -74,6 +74,7 @@ export type CommandMessage = {
   deviceId: string;
   recipeId: string;
   size: string;
+  price?: number;
   extras?: string[];
   ts: number;
 };

@@ -82,7 +82,9 @@ export default function StationPage() {
                 <div className="text-2xl font-bold text-[#1F3933] mb-2">New Order</div>
                 <div className="text-4xl font-extrabold text-[#1F3933] mb-2">#{activeOrder.orderId}</div>
                 <div className="text-xl text-[#1F3933] capitalize">{activeOrder.size} Size</div>
-                {/* Price could be looked up if we had full menu here, or passed in order */}
+                {activeOrder.price !== undefined && (
+                  <div className="text-2xl font-bold text-[#1F3933] mt-2">${Number(activeOrder.price).toFixed(2)}</div>
+                )}
               </div>
             </div>
           )}

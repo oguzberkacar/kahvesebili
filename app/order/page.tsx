@@ -40,9 +40,6 @@ export default function OrderPage() {
   // Get active stations from Master Context
   const { activeStations } = useMaster();
 
-  // Filter coffees
-  const activeCoffees = coffees.filter((c) => activeStations.includes(`station${c.stationId}`));
-
   const handleCoffeeClick = (coffee: Coffee) => {
     //...
     setSelectedCoffee(coffee);
@@ -86,18 +83,28 @@ export default function OrderPage() {
             {/* Content Grid */}
             <div className="w-full max-w-[800px] px-4 md:px-6 pb-24 pt-32">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {activeCoffees.length > 0 ? (
-                  activeCoffees.map((coffee) => (
-                    <div key={coffee.id} onClick={() => handleCoffeeClick(coffee as Coffee)}>
+                {coffees.map((coffee) => {
+                  const isActive = activeStations.includes(`station${coffee.stationId}`);
+                  return (
+                    <div
+                      key={coffee.id}
+                      onClick={() => isActive && handleCoffeeClick(coffee as Coffee)}
+                      className={cn(
+                        "relative transition-all duration-300",
+                        !isActive && "opacity-60 grayscale cursor-not-allowed"
+                      )}
+                    >
                       <CoffeeCard coffee={coffee as Coffee} />
+                      {!isActive && (
+                        <div className="absolute inset-0 bg-black/5 z-10 rounded-[32px] flex items-center justify-center">
+                          <span className="bg-black/60 text-white px-4 py-2 rounded-full text-sm font-bold backdrop-blur-sm">
+                            DEVICE OFFLINE
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  ))
-                ) : (
-                  <div className="col-span-1 md:col-span-2 flex flex-col items-center justify-center text-gray-500 py-20">
-                    <p className="text-xl">Waiting for active stations...</p>
-                    <p className="text-sm">Connect a station to see coffees.</p>
-                  </div>
-                )}
+                  );
+                })}
               </div>
             </div>
           </div>
