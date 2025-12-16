@@ -3,12 +3,14 @@ import { redirect } from "next/navigation";
 import coffees from "../../data/coffees.json";
 import KardoraBaseLogo from "../../components/KardoraBaseLogo";
 
+// type Props = { params: { id: string } };
+
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export default async function Page({ params }: Props) {
-  const { id } = params;
+  const { id } =  await params;
   const stationId = Number(id);
 
   if (!Number.isFinite(stationId)) {
