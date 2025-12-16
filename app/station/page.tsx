@@ -225,6 +225,7 @@ export default function StationPage() {
                         <span className="bg-[#65E5B4] h-full flex items-center px-8 text-lg font-black text-[#1F3933] rounded-l-full">
                           ORDER
                         </span>
+                        <span className="text-white text-lg font-bold uppercase tracking-wider">{order.size}</span>
                         <span className="flex-1 text-right pr-6 text-xl font-bold text-white">{order.orderId}</span>
                       </>
                     ) : (
@@ -236,6 +237,14 @@ export default function StationPage() {
                           )}
                         >
                           ORDER
+                        </span>
+                        <span
+                          className={cn(
+                            "text-lg font-bold uppercase tracking-wider",
+                            isSelected ? "text-[#1F3933]" : "text-[#1F3933]"
+                          )}
+                        >
+                          {order.size}
                         </span>
                         <span className="text-xl font-bold text-[#1F3933] pr-6">{order.orderId}</span>
                       </>
