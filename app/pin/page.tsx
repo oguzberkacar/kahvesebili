@@ -116,7 +116,7 @@ export default function PinPage() {
 
               <div
                 className={`transition-[max-height,opacity] duration-200 ease-out ${
-                  isSelected ? "max-h-[320px] opacity-100" : "max-h-0 opacity-0"
+                  isSelected ? "max-h-80 opacity-100" : "max-h-0 opacity-0"
                 }`}
               >
                 {isSelected && (
