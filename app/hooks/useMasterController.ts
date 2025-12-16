@@ -31,8 +31,8 @@ export function useMasterController() {
   useEffect(() => {
     if (connectionState === "connected") {
       subscribe([
-        { topic: mqttTopics.master.helloAll, qos: 1 },
-        { topic: mqttTopics.master.eventsAll, qos: 1 },
+        { topic: mqttTopics.master.helloAll, qos: 0 },
+        { topic: mqttTopics.master.eventsAll, qos: 0 },
       ]);
     }
   }, [connectionState, subscribe]);
