@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 
-const PINS = [14, 15, 18, 23];
+const PINS = [17];
 
 export default function PinPage() {
   // Track loading state for each pin individually
