@@ -53,6 +53,7 @@ export function useStationController({ stationId, brokerUrl }: StationController
       subscribe([
         { topic: topics.command, qos: 0 },
         { topic: topics.status, qos: 0 },
+        { topic: mqttTopics.master.broadcast, qos: 0 }, // Listen for Master discovery
       ]);
     } else {
       setStationState("DISCONNECTED");
@@ -97,6 +98,22 @@ export function useStationController({ stationId, brokerUrl }: StationController
   const handleMessage = useCallback((msg: IncomingMessage) => {
     try {
       const payload: any = msg.json || JSON.parse(msg.payload);
+
+      // 0. Handle Broadcast Discovery (Master asking "Who is there?")
+      if (msg.topic === mqttTopics.master.broadcast) {
+        console.log("Received Discovery Broadcast from Master");
+        // Respond with Hello immediately
+        const topics = mqttTopics.station(effectiveStationId);
+        publish({
+          topic: topics.hello,
+          payload: {
+            deviceId: effectiveStationId,
+            role: "station",
+            ts: Date.now(),
+          },
+        });
+        return;
+      }
 
       // 1. Config Message (Set Coffee Info)
       if (payload.type === "set_config") {

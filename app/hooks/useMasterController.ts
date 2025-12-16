@@ -25,15 +25,24 @@ export function useMasterController() {
     clientId: "master-screen",
   });
 
-  // Subscribe to all stations
+  // Subscribe to all stations AND Broadcast Discovery
   useEffect(() => {
     if (connectionState === "connected") {
       subscribe([
         { topic: mqttTopics.master.helloAll, qos: 0 },
         { topic: mqttTopics.master.eventsAll, qos: 0 },
       ]);
+
+      // Proactive Discovery: Ask "Who is there?"
+      console.log("Master connected. Broadcasting discovery...");
+      publish({
+        topic: mqttTopics.master.broadcast,
+        payload: { type: "discovery", ts: Date.now() },
+        qos: 0,
+        retain: false,
+      });
     }
-  }, [connectionState, subscribe]);
+  }, [connectionState, subscribe, publish]);
 
   // Handle Incoming Messages (Hello, Events)
   useEffect(() => {
