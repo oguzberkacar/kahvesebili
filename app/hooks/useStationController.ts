@@ -225,7 +225,8 @@ export function useStationController({ stationId, brokerUrl }: StationController
     });
 
     // Optimistically switch to PROCESSING (Master will confirm with GPIO)
-    setStationState("PROCESSING");
+    // setStationState("PROCESSING");
+    // Wait for Master confirmation instead.
   }, [publish, effectiveStationId, orders, selectedOrderId]);
 
   const handleReset = useCallback(() => {
