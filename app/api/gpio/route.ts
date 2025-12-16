@@ -48,6 +48,7 @@ export async function POST(request: Request) {
 
   const pin = clamp(toInt(body.pin, 17), MIN_PIN, MAX_PIN);
   const duration = clamp(toInt(body.duration, 2000), MIN_MS, MAX_MS);
+  const hold = body.hold === true;
 
   // value: 1 => HIGH pulse, 0 => LOW (force)
   const valueRaw = body.value;
@@ -57,13 +58,35 @@ export async function POST(request: Request) {
   try {
     // DEV / Mac / Windows -> MOCK
     if (process.platform !== "linux") {
-      console.log(`[MOCK GPIO] pin=${pin} value=${value} duration=${duration}ms`);
+      console.log(
+        `[MOCK GPIO] pin=${pin} value=${value} duration=${duration}ms hold=${hold}`
+      );
       return NextResponse.json({
         success: true,
         mocked: true,
         pin,
         value,
-        durationMs: duration,
+        durationMs: hold ? 0 : duration,
+        hold,
+      });
+    }
+
+    // ✅ 0) Hold HIGH (no timer) if requested
+    if (hold && value === 1) {
+      await execFileAsync(
+        "gpioset",
+        ["-c", CHIP, "-m", "exit", `${pin}=1`],
+        { timeout: 3000 }
+      );
+
+      return NextResponse.json({
+        success: true,
+        method: "gpioset",
+        chip: CHIP,
+        pin,
+        value: 1,
+        durationMs: 0,
+        hold: true,
       });
     }
 
