@@ -53,8 +53,8 @@ export function useStationController({ stationId, brokerUrl }: StationController
       const topics = mqttTopics.station(effectiveStationId);
       console.log(`Station ${effectiveStationId} Subscribing to:`, topics.command);
       subscribe([
-        { topic: topics.command, qos: 1 },
-        { topic: topics.status, qos: 1 }, // Listen for status updates (Finished)
+        { topic: topics.command, qos: 0 },
+        { topic: topics.status, qos: 0 }, // Listen for status updates (Finished)
       ]);
 
       // Publish Hello to request config
