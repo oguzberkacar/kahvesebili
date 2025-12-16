@@ -80,16 +80,19 @@ export function useStationController({ stationId, brokerUrl }: StationController
   useEffect(() => {
     if (messages.length === 0) return;
     const lastMsg = messages[messages.length - 1];
-
+    console.log("Station Received Message:", lastMsg);
     handleMessage(lastMsg);
   }, [messages]);
 
   const handleMessage = useCallback((msg: IncomingMessage) => {
     try {
+      console.log("Processing Message Topic:", msg.topic);
       const payload: any = msg.json || JSON.parse(msg.payload);
+      console.log("Processing Message Payload:", payload);
 
       // 1. Config Message (Set Coffee Info)
       if (payload.type === "set_config") {
+        console.log("Setting Config:", payload.coffee);
         setCoffeeConfig(payload.coffee);
         setStationState("IDLE");
         return;
