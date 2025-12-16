@@ -62,6 +62,13 @@ export type StatusMessage = {
   ts: number;
 };
 
+export type StationConfigMessage = {
+  type: "set_config";
+  deviceId: string;
+  coffee: Record<string, unknown>;
+  ts: number;
+};
+
 export type CommandMessage = {
   orderId: string;
   deviceId: string;
@@ -93,6 +100,7 @@ export type ParsedMqttMessage =
   | StatusMessage
   | CommandMessage
   | GpioCommandMessage
+  | StationConfigMessage
   | EventMessage
   | Record<string, unknown>
   | string;

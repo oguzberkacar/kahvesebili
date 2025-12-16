@@ -10,22 +10,12 @@ import {
   subscribeTopics,
   unsubscribeTopics,
 } from "./client";
-import type {
-  ConnectionState,
-  IncomingMessage,
-  MqttConnectConfig,
-  PublishMessage,
-  SubscriptionRequest,
-} from "./types";
+import type { ConnectionState, IncomingMessage, MqttConnectConfig, PublishMessage, SubscriptionRequest } from "./types";
 
 const MESSAGE_HISTORY_LIMIT = 50;
 
-export function useMqttClient(
-  config: MqttConnectConfig,
-  initialSubscriptions: SubscriptionRequest[] = [],
-) {
-  const { url, clientId, username, password, role, deviceId, keepalive, clean, protocol } =
-    config;
+export function useMqttClient(config: MqttConnectConfig, initialSubscriptions: SubscriptionRequest[] = []) {
+  const { url, clientId, username, password, role, deviceId, keepalive, clean, protocol } = config;
   const clientRef = useRef<MqttClient | null>(null);
   const [state, setState] = useState<ConnectionState>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -68,8 +58,15 @@ export function useMqttClient(
     const onReconnect = () => setState("reconnecting");
     const onClose = () => setState("closed");
     const onError = (err: Error) => {
-      console.error("MQTT error", err);
-      setError(err?.message || "MQTT error");
+      // Suppress connection timeout errors to avoid console noise in production
+      // or confusing users in dev mode if infinite retry is intended.
+      if (err?.message?.includes("connack timeout") || err?.message?.includes("client is not ready")) {
+        // Just set error state, don't log to console
+        setError(err.message);
+      } else {
+        console.error("MQTT error", err);
+        setError(err?.message || "MQTT error");
+      }
       setState("error");
     };
 
@@ -88,17 +85,7 @@ export function useMqttClient(
       clientRef.current = null;
       setState("idle");
     };
-  }, [
-    url,
-    clientId,
-    username,
-    password,
-    role,
-    deviceId,
-    keepalive,
-    clean,
-    protocol,
-  ]);
+  }, [url, clientId, username, password, role, deviceId, keepalive, clean, protocol]);
 
   const publish = useCallback(async (message: PublishMessage) => {
     const client = clientRef.current;
@@ -116,9 +103,7 @@ export function useMqttClient(
   const unsubscribe = useCallback(async (topics: string[]) => {
     const client = clientRef.current;
     if (!client) throw new Error("MQTT client is not ready");
-    subscriptionsRef.current = subscriptionsRef.current.filter(
-      (item) => !topics.includes(item.topic),
-    );
+    subscriptionsRef.current = subscriptionsRef.current.filter((item) => !topics.includes(item.topic));
     await unsubscribeTopics(client, topics);
   }, []);
 

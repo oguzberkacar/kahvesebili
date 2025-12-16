@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useMaster } from "../context/MasterContext";
 
 // Re-defining interface locally if needed or import
 interface Sizes {
@@ -13,6 +14,8 @@ interface Sizes {
 
 interface CoffeeType {
   id: string;
+  stationId: number; // Added for MQTT routing
+  pin: number; // Added for GPIO routing
   name: string;
   image: string;
   imageRaw: string;
@@ -56,6 +59,7 @@ export default function CoffeeDetail({
   const [orderNumber, setOrderNumber] = useState("");
   const router = useRouter();
   const currencySymbol = coffee.currency?.symbol ?? "$";
+  const { sendOrder } = useMaster();
 
   // Payment Simulation Effect
   // Payment Simulation Effect
@@ -65,13 +69,23 @@ export default function CoffeeDetail({
       timer = setTimeout(() => {
         setIsWaitingPayment(false);
         setIsPaymentSuccess(true);
-        setOrderNumber("#FG" + Math.floor(Math.random() * 89999 + 10000));
+        const newOrderNumber = "#FG" + Math.floor(Math.random() * 89999 + 10000);
+        setOrderNumber(newOrderNumber);
+
+        // Send Order to Station via MQTT
+        // Assuming stationId mapping: 1 -> "station1"
+        const targetStationId = `station${coffee.stationId}`;
+        sendOrder(targetStationId, {
+          orderId: newOrderNumber,
+          size: selectedSize,
+          recipeId: coffee.id,
+        });
       }, 3000);
     }
     return () => {
       if (timer) clearTimeout(timer);
     };
-  }, [isWaitingPayment, setIsPaymentSuccess]);
+  }, [isWaitingPayment, setIsPaymentSuccess, coffee, selectedSize, sendOrder]);
 
   const handlePaymentClick = () => {
     setIsPaymentView(true);

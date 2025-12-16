@@ -4,8 +4,11 @@
         "stationId": 1,
         "pin": 14,
         "name": "Ethiopia",
-        "isActive": false,
-        "currency": { "symbol": "₺", "code": "TRY" },
+        "isActive": true,
+        "currency": {
+            "symbol": "₺",
+            "code": "TRY"
+        },
         "image": "/cups/cold/cup1.png",
         "imageRaw": "/cups/cold/cup1_raw.png",
         "tags": [
@@ -41,7 +44,10 @@
         "pin": 15,
         "name": "Colombia",
         "isActive": true,
-        "currency": { "symbol": "₺", "code": "TRY" },
+        "currency": {
+            "symbol": "₺",
+            "code": "TRY"
+        },
         "image": "/cups/hot/cup2.png",
         "imageRaw": "/cups/hot/cup2_raw.png",
         "tags": [
@@ -77,7 +83,10 @@
         "pin": 18,
         "name": "Brasil",
         "isActive": true,
-        "currency": { "symbol": "₺", "code": "TRY" },
+        "currency": {
+            "symbol": "₺",
+            "code": "TRY"
+        },
         "image": "/cups/hot/cup1.png",
         "imageRaw": "/cups/hot/cup1_raw.png",
         "tags": [
@@ -113,7 +122,10 @@
         "pin": 23,
         "name": "Guatemala",
         "isActive": true,
-        "currency": { "symbol": "₺", "code": "TRY" },
+        "currency": {
+            "symbol": "₺",
+            "code": "TRY"
+        },
         "image": "/cups/cold/cup2.png",
         "imageRaw": "/cups/cold/cup2_raw.png",
         "tags": [
@@ -127,222 +139,6 @@
             "Altitude": "1500–1700m",
             "Variety": "Bourbon, Caturra",
             "Flavor Notes": "Dark Chocolate, Spices, Smoke, Floral"
-        },
-        "sizes": {
-            "small": {
-                "price": 85,
-                "volume": "250ml"
-            },
-            "medium": {
-                "price": 95,
-                "volume": "350ml"
-            },
-            "large": {
-                "price": 110,
-                "volume": "500ml"
-            }
-        }
-    },
-    {
-        "id": "costa-rica",
-        "stationId": 5,
-        "pin": 14,
-        "name": "Costa Rica",
-        "isActive": true,
-        "currency": { "symbol": "₺", "code": "TRY" },
-        "image": "/cups/hot/cup2.png",
-        "imageRaw": "/cups/hot/cup2_raw.png",
-        "tags": [
-            "Hot"
-        ],
-        "description": "A very clean and balanced coffee with bright acidity and honey sweetness",
-        "roast": "Medium Roast",
-        "details": {
-            "Process": "Honey",
-            "Region": "Tarrazú",
-            "Altitude": "1200–1800m",
-            "Variety": "Catuai, Caturra",
-            "Flavor Notes": "Honey, Citrus, Brown Sugar, Berry"
-        },
-        "sizes": {
-            "small": {
-                "price": 90,
-                "volume": "250ml"
-            },
-            "medium": {
-                "price": 100,
-                "volume": "350ml"
-            },
-            "large": {
-                "price": 115,
-                "volume": "500ml"
-            }
-        }
-    },
-    {
-        "id": "kenya",
-        "stationId": 6,
-        "pin": 15,
-        "name": "Kenya",
-        "isActive": true,
-        "currency": { "symbol": "₺", "code": "TRY" },
-        "image": "/cups/cold/cup1.png",
-        "imageRaw": "/cups/cold/cup1_raw.png",
-        "tags": [
-            "Cold"
-        ],
-        "description": "A bold and juicy coffee known for its intense fruit acidity and complex flavor",
-        "roast": "Light-Medium Roast",
-        "details": {
-            "Process": "Washed",
-            "Region": "Nyeri",
-            "Altitude": "1700–2000m",
-            "Variety": "SL28, SL34",
-            "Flavor Notes": "Black Currant, Grapefruit, Tomato, Wine"
-        },
-        "sizes": {
-            "small": {
-                "price": 95,
-                "volume": "250ml"
-            },
-            "medium": {
-                "price": 105,
-                "volume": "350ml"
-            },
-            "large": {
-                "price": 120,
-                "volume": "500ml"
-            }
-        }
-    },
-    {
-        "id": "indonesia",
-        "stationId": 7,
-        "pin": 18,
-        "name": "Indonesia",
-        "isActive": true,
-        "currency": { "symbol": "₺", "code": "TRY" },
-        "image": "/cups/hot/cup1.png",
-        "imageRaw": "/cups/hot/cup1_raw.png",
-        "tags": [
-            "Hot"
-        ],
-        "description": "A low-acid, full-bodied coffee with distinctive earthy and herbal notes",
-        "roast": "Dark Roast",
-        "details": {
-            "Process": "Wet-Hulled (Giling Basah)",
-            "Region": "Sumatra",
-            "Altitude": "1100–1500m",
-            "Variety": "Typica, Catimor",
-            "Flavor Notes": "Earth, Cedar, Spice, Tobacco"
-        },
-        "sizes": {
-            "small": {
-                "price": 85,
-                "volume": "250ml"
-            },
-            "medium": {
-                "price": 95,
-                "volume": "350ml"
-            },
-            "large": {
-                "price": 110,
-                "volume": "500ml"
-            }
-        }
-    },
-    {
-        "id": "vietnam",
-        "stationId": 8,
-        "pin": 23,
-        "name": "Vietnam",
-        "isActive": true,
-        "currency": { "symbol": "₺", "code": "TRY" },
-        "image": "/cups/cold/cup2.png",
-        "imageRaw": "/cups/cold/cup2_raw.png",
-        "tags": [
-            "Cold"
-        ],
-        "description": "A strong, full-bodied coffee with bold chocolate and nutty flavors",
-        "roast": "Dark Roast",
-        "details": {
-            "Process": "Natural",
-            "Region": "Da Lat (Lam Dong)",
-            "Altitude": "1400–1600m",
-            "Variety": "Arabica",
-            "Flavor Notes": "Dark Chocolate, Nutty, Caramel, Vanilla"
-        },
-        "sizes": {
-            "small": {
-                "price": 80,
-                "volume": "250ml"
-            },
-            "medium": {
-                "price": 90,
-                "volume": "350ml"
-            },
-            "large": {
-                "price": 105,
-                "volume": "500ml"
-            }
-        }
-    },
-    {
-        "id": "jamaica",
-        "stationId": 9,
-        "pin": 14,
-        "name": "Jamaica",
-        "isActive": true,
-        "currency": { "symbol": "₺", "code": "TRY" },
-        "image": "/cups/hot/cup2.png",
-        "imageRaw": "/cups/hot/cup2_raw.png",
-        "tags": [
-            "Hot"
-        ],
-        "description": "A world-renowned mild coffee, exceptionally smooth with no bitterness",
-        "roast": "Medium Roast",
-        "details": {
-            "Process": "Washed",
-            "Region": "Blue Mountains",
-            "Altitude": "900–1700m",
-            "Variety": "Typica",
-            "Flavor Notes": "Floral, Sweet Herb, Cream, Nuts"
-        },
-        "sizes": {
-            "small": {
-                "price": 120,
-                "volume": "250ml"
-            },
-            "medium": {
-                "price": 135,
-                "volume": "350ml"
-            },
-            "large": {
-                "price": 150,
-                "volume": "500ml"
-            }
-        }
-    },
-    {
-        "id": "honduras",
-        "stationId": 10,
-        "pin": 15,
-        "name": "Honduras",
-        "isActive": true,
-        "currency": { "symbol": "₺", "code": "TRY" },
-        "image": "/cups/hot/cup1.png",
-        "imageRaw": "/cups/hot/cup1_raw.png",
-        "tags": [
-            "Hot"
-        ],
-        "description": "A versatile coffee with a sweet aroma and balanced fruitiness",
-        "roast": "Medium Roast",
-        "details": {
-            "Process": "Washed",
-            "Region": "Marcala",
-            "Altitude": "1300–1700m",
-            "Variety": "Bourbon, Catuai",
-            "Flavor Notes": "Toffee, Nuts, Tropical Fruit, Vanilla"
         },
         "sizes": {
             "small": {
