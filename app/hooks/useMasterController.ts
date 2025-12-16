@@ -132,34 +132,47 @@ export function useMasterController() {
               payload: { status: "processing", deviceId, ts: Date.now() },
             });
 
+            setTimeout(() => {
+              publish({
+                topic: mqttTopics.station(deviceId).status,
+                payload: { status: "completed", deviceId, ts: Date.now() },
+              });
+
+              // Update Status to COMPLETED
+              setActiveOrders((prev) =>
+                prev.map((o) => (o.orderId === orderId ? { ...o, status: "COMPLETED", endTime: Date.now() } : o))
+              );
+
+              // Optional: Cleanup old completed orders?
+            }, 10000); // 10 seconds
             // 2b. Trigger GPIO API
-            fetch("/api/gpio", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ pin: coffee.pin }),
-            })
-              .then(async (res) => {
-                if (res.ok) {
-                  console.log("GPIO Triggered");
-                  // 2c. Wait for duration (e.g. 10s as requested)
-                  setTimeout(() => {
-                    publish({
-                      topic: mqttTopics.station(deviceId).status,
-                      payload: { status: "completed", deviceId, ts: Date.now() },
-                    });
+            // fetch("/api/gpio", {
+            //   method: "POST",
+            //   headers: { "Content-Type": "application/json" },
+            //   body: JSON.stringify({ pin: coffee.pin }),
+            // })
+            //   .then(async (res) => {
+            //     if (res.ok) {
+            //       console.log("GPIO Triggered");
+            //       // 2c. Wait for duration (e.g. 10s as requested)
+            //       setTimeout(() => {
+            //         publish({
+            //           topic: mqttTopics.station(deviceId).status,
+            //           payload: { status: "completed", deviceId, ts: Date.now() },
+            //         });
 
-                    // Update Status to COMPLETED
-                    setActiveOrders((prev) =>
-                      prev.map((o) => (o.orderId === orderId ? { ...o, status: "COMPLETED", endTime: Date.now() } : o))
-                    );
+            //         // Update Status to COMPLETED
+            //         setActiveOrders((prev) =>
+            //           prev.map((o) => (o.orderId === orderId ? { ...o, status: "COMPLETED", endTime: Date.now() } : o))
+            //         );
 
-                    // Optional: Cleanup old completed orders?
-                  }, 10000); // 10 seconds
-                } else {
-                  console.error("GPIO Failed");
-                }
-              })
-              .catch((err) => console.error("GPIO Call Error", err));
+            //         // Optional: Cleanup old completed orders?
+            //       }, 10000); // 10 seconds
+            //     } else {
+            //       console.error("GPIO Failed");
+            //     }
+            //   })
+            //   .catch((err) => console.error("GPIO Call Error", err));
           }
         }
       } catch (e) {

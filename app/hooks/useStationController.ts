@@ -205,6 +205,13 @@ export function useStationController({ stationId, brokerUrl }: StationController
     }
   }, [orders, stationState]);
 
+  // Auto-select if there is only one order
+  useEffect(() => {
+    if (orders.length === 1) {
+      setSelectedOrderId(orders[0].orderId);
+    }
+  }, [orders]);
+
   // Actions
   const handleStartOrder = useCallback(() => {
     if (!selectedOrderId) return;

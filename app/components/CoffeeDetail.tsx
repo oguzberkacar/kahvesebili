@@ -104,9 +104,20 @@ export default function CoffeeDetail({
     }
   };
 
+  // Auto-redirect after success
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    if (isPaymentSuccess) {
+      timeout = setTimeout(() => {
+        router.push("/order");
+      }, 15000); // 15 seconds
+    }
+    return () => clearTimeout(timeout);
+  }, [isPaymentSuccess, router]);
+
   const handleBack = () => {
     if (isPaymentSuccess) {
-      router.push("/siparis");
+      router.push("/order");
     } else if (isWaitingPayment) {
       setIsWaitingPayment(false);
       setWaitingMethod(null);
