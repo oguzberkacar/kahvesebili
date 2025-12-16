@@ -4,17 +4,22 @@ import coffees from "../../data/coffees.json";
 import KardoraBaseLogo from "../../components/KardoraBaseLogo";
 
 type Props = {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 };
 
 export default async function Page({ params }: Props) {
-  const { id } = await params;
+  const { id } = params;
+  const stationId = Number(id);
+
+  if (!Number.isFinite(stationId)) {
+    redirect("/station");
+  }
 
   // Since we imported coffees, let's type check or cast if needed,
   // but JSON import usually infers types.
   // We added isActive to JSON manually, TypeScript might not know it if we have a type definition file elsewhere.
   // But usually it infers from JSON content.
-  const coffee = coffees.find((c) => c.id === id);
+  const coffee = coffees.find((c) => c.stationId === stationId);
 
   if (!coffee) {
     redirect("/station");

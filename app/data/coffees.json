@@ -2,6 +2,7 @@
     {
         "id": "ethiopia",
         "stationId": 1,
+        "pin": 14,
         "name": "Ethiopia",
         "isActive": false,
         "currency": { "symbol": "₺", "code": "TRY" },
@@ -36,7 +37,8 @@
     },
     {
         "id": "colombia",
-        "stationId": 4,
+        "stationId": 2,
+        "pin": 15,
         "name": "Colombia",
         "isActive": true,
         "currency": { "symbol": "₺", "code": "TRY" },
@@ -71,7 +73,8 @@
     },
     {
         "id": "brasil",
-        "stationId": 7,
+        "stationId": 3,
+        "pin": 18,
         "name": "Brasil",
         "isActive": true,
         "currency": { "symbol": "₺", "code": "TRY" },
@@ -106,7 +109,8 @@
     },
     {
         "id": "guatemala",
-        "stationId": 2,
+        "stationId": 4,
+        "pin": 23,
         "name": "Guatemala",
         "isActive": true,
         "currency": { "symbol": "₺", "code": "TRY" },
@@ -141,7 +145,8 @@
     },
     {
         "id": "costa-rica",
-        "stationId": 9,
+        "stationId": 5,
+        "pin": 14,
         "name": "Costa Rica",
         "isActive": true,
         "currency": { "symbol": "₺", "code": "TRY" },
@@ -176,7 +181,8 @@
     },
     {
         "id": "kenya",
-        "stationId": 5,
+        "stationId": 6,
+        "pin": 15,
         "name": "Kenya",
         "isActive": true,
         "currency": { "symbol": "₺", "code": "TRY" },
@@ -211,7 +217,8 @@
     },
     {
         "id": "indonesia",
-        "stationId": 8,
+        "stationId": 7,
+        "pin": 18,
         "name": "Indonesia",
         "isActive": true,
         "currency": { "symbol": "₺", "code": "TRY" },
@@ -246,7 +253,8 @@
     },
     {
         "id": "vietnam",
-        "stationId": 3,
+        "stationId": 8,
+        "pin": 23,
         "name": "Vietnam",
         "isActive": true,
         "currency": { "symbol": "₺", "code": "TRY" },
@@ -281,7 +289,8 @@
     },
     {
         "id": "jamaica",
-        "stationId": 6,
+        "stationId": 9,
+        "pin": 14,
         "name": "Jamaica",
         "isActive": true,
         "currency": { "symbol": "₺", "code": "TRY" },
@@ -317,6 +326,7 @@
     {
         "id": "honduras",
         "stationId": 10,
+        "pin": 15,
         "name": "Honduras",
         "isActive": true,
         "currency": { "symbol": "₺", "code": "TRY" },
