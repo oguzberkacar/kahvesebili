@@ -60,6 +60,80 @@ export function useStationController({ stationId, brokerUrl }: StationController
     }
   }, [connectionState, effectiveStationId, subscribe]);
 
+  // Handle Incoming Message Logic (defined before usage)
+  const handleMessage = useCallback(
+    (msg: IncomingMessage) => {
+      try {
+        const payload: any = msg.json || JSON.parse(msg.payload);
+
+        // 0. Handle Broadcast Discovery (Master asking "Who is there?")
+        if (msg.topic === mqttTopics.master.broadcast) {
+          console.log("Received Discovery Broadcast from Master");
+          // Respond with Hello immediately
+          const topics = mqttTopics.station(effectiveStationId);
+          publish({
+            topic: topics.hello,
+            payload: {
+              deviceId: effectiveStationId,
+              role: "station",
+              ts: Date.now(),
+            },
+          });
+          return;
+        }
+
+        // 1. Config Message (Set Coffee Info)
+        if (payload.type === "set_config") {
+          const newConfig = payload.coffee;
+          // Check for equality (simple JSON comparison)
+          if (coffeeConfig && JSON.stringify(coffeeConfig.id) === JSON.stringify(newConfig.id)) {
+            // Deep check to prevent redundant updates
+            if (JSON.stringify(coffeeConfig) === JSON.stringify(newConfig)) {
+              return; // Ignore identical config
+            }
+          }
+
+          console.log("Config Received:", newConfig.name);
+          setCoffeeConfig(newConfig);
+          // Only switch to IDLE if we are Disconnected.
+          // If we are serving an order, don't interrupt!
+          setStationState((prev) => {
+            if (prev === "DISCONNECTED") return "IDLE";
+            return prev; // Keep current state (IDLE, ORDER_RECEIVED, etc)
+          });
+          return;
+        }
+
+        // 2. Order Command (Show Order Screen)
+        // If it has orderId and size, it's an order command
+        if (payload.orderId && payload.size) {
+          setActiveOrder(payload);
+          setStationState("ORDER_RECEIVED");
+          return;
+        }
+
+        // 3. Status Update (Started / Finished)
+        // Master might send { status: 'processing' } or { status: 'completed' }
+        if (payload.status === "processing") {
+          // Master acknowledged start
+          // We might already be in PROCESSING, but good to confirm
+          setStationState("PROCESSING");
+        } else if (payload.status === "completed") {
+          setStationState("COMPLETED");
+
+          // Auto reset after 30s
+          setTimeout(() => {
+            setStationState((curr) => (curr === "COMPLETED" ? "IDLE" : curr));
+            setActiveOrder(null);
+          }, 30000);
+        }
+      } catch (e) {
+        console.error("Failed to parse station message", e);
+      }
+    },
+    [effectiveStationId, publish, coffeeConfig]
+  );
+
   // 2. Handle Handshake (Retry Hello until Configured)
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -88,68 +162,12 @@ export function useStationController({ stationId, brokerUrl }: StationController
     return () => clearInterval(interval);
   }, [connectionState, coffeeConfig, effectiveStationId, publish]);
 
-  // Handle Incoming Messages
+  // Handle Incoming Messages (Using the now already-defined handleMessage)
   useEffect(() => {
     if (messages.length === 0) return;
     const lastMsg = messages[messages.length - 1];
     handleMessage(lastMsg);
-  }, [messages]);
-
-  const handleMessage = useCallback((msg: IncomingMessage) => {
-    try {
-      const payload: any = msg.json || JSON.parse(msg.payload);
-
-      // 0. Handle Broadcast Discovery (Master asking "Who is there?")
-      if (msg.topic === mqttTopics.master.broadcast) {
-        console.log("Received Discovery Broadcast from Master");
-        // Respond with Hello immediately
-        const topics = mqttTopics.station(effectiveStationId);
-        publish({
-          topic: topics.hello,
-          payload: {
-            deviceId: effectiveStationId,
-            role: "station",
-            ts: Date.now(),
-          },
-        });
-        return;
-      }
-
-      // 1. Config Message (Set Coffee Info)
-      if (payload.type === "set_config") {
-        console.log("Config Received:", payload.coffee.name);
-        setCoffeeConfig(payload.coffee);
-        setStationState("IDLE");
-        return;
-      }
-
-      // 2. Order Command (Show Order Screen)
-      // If it has orderId and size, it's an order command
-      if (payload.orderId && payload.size) {
-        setActiveOrder(payload);
-        setStationState("ORDER_RECEIVED");
-        return;
-      }
-
-      // 3. Status Update (Started / Finished)
-      // Master might send { status: 'processing' } or { status: 'completed' }
-      if (payload.status === "processing") {
-        // Master acknowledged start
-        // We might already be in PROCESSING, but good to confirm
-        setStationState("PROCESSING");
-      } else if (payload.status === "completed") {
-        setStationState("COMPLETED");
-
-        // Auto reset after 30s
-        setTimeout(() => {
-          setStationState((curr) => (curr === "COMPLETED" ? "IDLE" : curr));
-          setActiveOrder(null);
-        }, 30000);
-      }
-    } catch (e) {
-      console.error("Failed to parse station message", e);
-    }
-  }, []);
+  }, [messages, handleMessage]);
 
   // Actions
   const handleStartOrder = useCallback(() => {
@@ -164,6 +182,7 @@ export function useStationController({ stationId, brokerUrl }: StationController
         deviceId: effectiveStationId,
         orderId: activeOrder.orderId,
         ts: Date.now(),
+        price: activeOrder.price,
       },
     });
 
