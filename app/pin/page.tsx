@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 
-const PINS = [17];
+const PINS = [14, 15, 18, 23];
 const DURATIONS = [
   { label: "1s", ms: 1000 },
   { label: "3s", ms: 3000 },
@@ -50,11 +50,7 @@ export default function PinPage() {
       }
 
       setStatus(
-        value === 0
-          ? `Pin ${pin} OFF sent`
-          : hold
-            ? `Pin ${pin} ON (steady)`
-            : `Pin ${pin} ON for ${duration / 1000}s`
+        value === 0 ? `Pin ${pin} OFF sent` : hold ? `Pin ${pin} ON (steady)` : `Pin ${pin} ON for ${duration / 1000}s`
       );
     } catch (error) {
       console.error(`GPIO ${pin} Error:`, error);
@@ -67,9 +63,7 @@ export default function PinPage() {
   return (
     <div className="min-h-screen w-full bg-slate-100 flex flex-col items-center justify-center gap-8 p-6">
       <h1 className="text-4xl font-bold text-gray-800">GPIO Control</h1>
-      <p className="text-gray-600 text-center max-w-2xl">
-        Pin seç, kartı aç, süreyi ya da On/Off eylemini gönder.
-      </p>
+      <p className="text-gray-600 text-center max-w-2xl">Pin seç, kartı aç, süreyi ya da On/Off eylemini gönder.</p>
 
       <div className="w-full max-w-3xl space-y-4">
         {PINS.map((pin) => {
@@ -91,18 +85,14 @@ export default function PinPage() {
                   loadingMap[pin]
                     ? "bg-gray-100 text-gray-500 cursor-not-allowed"
                     : isSelected
-                      ? "bg-blue-50 text-blue-800"
-                      : "bg-white hover:bg-slate-50"
+                    ? "bg-blue-50 text-blue-800"
+                    : "bg-white hover:bg-slate-50"
                 }`}
               >
                 <div>
                   <p className="text-2xl font-bold">Pin {pin}</p>
                   <p className="text-sm opacity-70">
-                    {loadingMap[pin]
-                      ? "İşleniyor..."
-                      : isSelected
-                        ? "Açık - seçenekler aşağıda"
-                        : "Detay için tıkla"}
+                    {loadingMap[pin] ? "İşleniyor..." : isSelected ? "Açık - seçenekler aşağıda" : "Detay için tıkla"}
                   </p>
                 </div>
                 <span
@@ -122,9 +112,7 @@ export default function PinPage() {
                 {isSelected && (
                   <div className="px-6 pb-6 pt-2 space-y-4">
                     <div>
-                      <p className="text-sm font-semibold text-gray-700 mb-2">
-                        Süre (otomatik gönderilir)
-                      </p>
+                      <p className="text-sm font-semibold text-gray-700 mb-2">Süre (otomatik gönderilir)</p>
                       <div className="grid grid-cols-2 gap-3">
                         {DURATIONS.map(({ label, ms }) => {
                           const active = selectedDuration === ms;
@@ -144,8 +132,8 @@ export default function PinPage() {
                                 loadingMap[pin]
                                   ? "bg-gray-200 text-gray-500 cursor-not-allowed border-gray-200"
                                   : active
-                                    ? "bg-emerald-600 text-white border-emerald-500 shadow-md"
-                                    : "bg-slate-100 text-gray-800 hover:bg-slate-200 border-slate-200"
+                                  ? "bg-emerald-600 text-white border-emerald-500 shadow-md"
+                                  : "bg-slate-100 text-gray-800 hover:bg-slate-200 border-slate-200"
                               }`}
                             >
                               {label}
@@ -156,9 +144,7 @@ export default function PinPage() {
                     </div>
 
                     <div>
-                      <p className="text-sm font-semibold text-gray-700 mb-2">
-                        On / Off
-                      </p>
+                      <p className="text-sm font-semibold text-gray-700 mb-2">On / Off</p>
                       <div className="grid grid-cols-2 gap-3">
                         <button
                           onClick={() =>
@@ -204,9 +190,7 @@ export default function PinPage() {
       </div>
 
       {status && (
-        <div className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
-          {status}
-        </div>
+        <div className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">{status}</div>
       )}
 
       <Link

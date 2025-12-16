@@ -7,11 +7,22 @@ import type { IncomingMessage } from "../lib/mqtt/types";
 import { getMqttConfigFromEnv } from "../lib/mqtt/config";
 import coffees from "../data/coffees.json";
 
+export type MasterOrder = {
+  orderId: string;
+  stationId: string;
+  status: "SENT" | "PROCESSING" | "COMPLETED";
+  startTime?: number;
+  endTime?: number;
+  details: any;
+};
+
 export function useMasterController() {
   const envConfig = getMqttConfigFromEnv();
 
   // Track connected stations
   const [activeStations, setActiveStations] = useState<Set<string>>(new Set());
+  // Track orders
+  const [activeOrders, setActiveOrders] = useState<MasterOrder[]>([]);
 
   const {
     client,
@@ -106,6 +117,11 @@ export function useMasterController() {
           const { deviceId, orderId } = payload;
           console.log(`Start request from ${deviceId} for order ${orderId}`);
 
+          // Update Order Status to PROCESSING
+          setActiveOrders((prev) =>
+            prev.map((o) => (o.orderId === orderId ? { ...o, status: "PROCESSING", startTime: Date.now() } : o))
+          );
+
           const numericId = parseInt(deviceId.replace("station", ""), 10);
           const coffee = coffees.find((c) => c.stationId === numericId);
 
@@ -131,6 +147,13 @@ export function useMasterController() {
                       topic: mqttTopics.station(deviceId).status,
                       payload: { status: "completed", deviceId, ts: Date.now() },
                     });
+
+                    // Update Status to COMPLETED
+                    setActiveOrders((prev) =>
+                      prev.map((o) => (o.orderId === orderId ? { ...o, status: "COMPLETED", endTime: Date.now() } : o))
+                    );
+
+                    // Optional: Cleanup old completed orders?
                   }, 10000); // 10 seconds
                 } else {
                   console.error("GPIO Failed");
@@ -151,6 +174,18 @@ export function useMasterController() {
     (stationId: string, orderDetails: any) => {
       // orderDetails: { orderId, size, recipeId... }
       const topic = mqttTopics.station(stationId).command;
+
+      // Track locally
+      setActiveOrders((prev) => [
+        ...prev,
+        {
+          orderId: orderDetails.orderId,
+          stationId,
+          status: "SENT",
+          details: orderDetails,
+        },
+      ]);
+
       publish({
         topic,
         payload: {
@@ -167,5 +202,6 @@ export function useMasterController() {
     connectionState,
     sendOrder,
     activeStations: Array.from(activeStations),
+    activeOrders,
   };
 }

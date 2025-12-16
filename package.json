@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "node scripts/dev-station.mjs",
     "dev:master": "npm run dev -- master master",
-    "dev:station1": "npm run dev -- station1 station",
+    "dev:station1": "npm run dev  -- station1 station",
     "dev:station2": "npm run dev -- station2 station",
     "dev:station3": "npm run dev -- station3 station",
     "dev:station4": "npm run dev -- station4 station",
