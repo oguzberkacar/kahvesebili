@@ -21,6 +21,7 @@ type Coffee = {
     Region?: string;
     "Flavor Notes"?: string;
   };
+  pin?: number;
   sizes?: {
     small?: { price: number };
     medium?: { price: number };
@@ -100,6 +101,7 @@ const iceStates: IceState[][] = [
 
 export default function OrderStationClient({ coffee, displayOrderId }: Props) {
   const [isStarted, setIsStarted] = useState(false);
+  const [isTriggeringPin, setIsTriggeringPin] = useState(false);
   const [animationStep, setAnimationStep] = useState(0);
   const [isReady, setIsReady] = useState(false);
   const router = useRouter();
@@ -143,6 +145,31 @@ export default function OrderStationClient({ coffee, displayOrderId }: Props) {
     if (coffee.sizes.medium) sizeOptions.push("M");
     if (coffee.sizes.large) sizeOptions.push("L");
   }
+
+  const triggerPin = async () => {
+    // Start UI flow immediately
+    setIsStarted(true);
+    if (!coffee.pin) return;
+
+    setIsTriggeringPin(true);
+    try {
+      await fetch("/api/gpio", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          pin: coffee.pin,
+          duration: 5000,
+          value: 1,
+        }),
+      });
+    } catch (error) {
+      console.error("GPIO trigger failed", error);
+    } finally {
+      setIsTriggeringPin(false);
+    }
+  };
 
   return (
     <div className="w-full h-screen bg-gray-100 flex items-center justify-center p-4">
@@ -321,10 +348,15 @@ export default function OrderStationClient({ coffee, displayOrderId }: Props) {
                 </button>
               ) : (
                 <button
-                  onClick={() => setIsStarted(true)}
-                  className="mt-8 bg-white border-2 border-gray-200 text-secondary text-3xl font-black py-4 px-12 rounded-full shadow-lg active:scale-95 transition-transform uppercase tracking-wider"
+                  onClick={triggerPin}
+                  disabled={isTriggeringPin}
+                  className={`mt-8 border-2 text-secondary text-3xl font-black py-4 px-12 rounded-full shadow-lg active:scale-95 transition-transform uppercase tracking-wider ${
+                    isTriggeringPin
+                      ? "bg-gray-200 border-gray-200 cursor-not-allowed"
+                      : "bg-white border-gray-200"
+                  }`}
                 >
-                  Start
+                  {isTriggeringPin ? "Starting..." : "Start"}
                 </button>
               )}
             </div>

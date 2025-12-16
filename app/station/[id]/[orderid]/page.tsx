@@ -10,7 +10,7 @@ type Props = {
 export default async function OrderPage({ params }: Props) {
   const { id, orderid } = await params;
 
-  const coffee = coffees.find((c) => c.id === id);
+  const coffee = coffees.find((c) => c.stationId === Number(id));
 
   if (!coffee) {
     redirect("/station");
