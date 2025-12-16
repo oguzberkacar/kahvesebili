@@ -11,10 +11,7 @@ const MQTT_URL = process.env.NEXT_PUBLIC_MQTT_URL || "ws://192.168.1.9:3000";
 const STATION_ID = process.env.NEXT_PUBLIC_DEVICE_ID || "station1";
 
 export default function StationPage() {
-  const { stationState, coffeeConfig, activeOrder, handleStartOrder, handleReset, connectionState } = useStationController({
-    stationId: STATION_ID,
-    brokerUrl: MQTT_URL,
-  });
+  const { stationState, coffeeConfig, activeOrder, handleStartOrder, handleReset, connectionState } = useStationController();
 
   // Not Active / Disconnected View
   if (stationState === "DISCONNECTED" || (!coffeeConfig && stationState === "IDLE")) {

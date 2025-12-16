@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useMqttClient } from "../lib/mqtt/useMqttClient";
 import { mqttTopics } from "../lib/mqtt/topics";
 import type { StationConfigMessage, CommandMessage, IncomingMessage } from "../lib/mqtt/types";
+import { getMqttConfigFromEnv } from "../lib/mqtt/config";
 
 type StationState =
   | "DISCONNECTED"
@@ -13,14 +14,21 @@ type StationState =
   | "COMPLETED"; // Done
 
 type StationControllerProps = {
-  stationId: string;
-  brokerUrl: string;
+  // Props can override env, but we default to env
+  stationId?: string;
+  brokerUrl?: string;
 };
 
-export function useStationController({ stationId, brokerUrl }: StationControllerProps) {
+export function useStationController({ stationId, brokerUrl }: StationControllerProps = {}) {
   const [stationState, setStationState] = useState<StationState>("DISCONNECTED");
   const [coffeeConfig, setCoffeeConfig] = useState<any>(null); // The coffee info
   const [activeOrder, setActiveOrder] = useState<CommandMessage | null>(null);
+
+  // Get defaults from env
+  const envConfig = getMqttConfigFromEnv();
+
+  // Effective values
+  const effectiveStationId = stationId || envConfig.deviceId || "station1";
 
   // MQTT Client
   const {
@@ -30,27 +38,31 @@ export function useStationController({ stationId, brokerUrl }: StationController
     publish,
     messages,
   } = useMqttClient({
-    url: brokerUrl,
-    clientId: stationId + "_" + Math.random().toString(16).slice(2, 8),
+    ...envConfig,
+    url: brokerUrl || envConfig.url,
     role: "station",
-    deviceId: stationId,
+    deviceId: effectiveStationId,
+    clientId: effectiveStationId + "_" + Math.random().toString(16).slice(2, 8),
   });
 
   // Handle Connection State
   useEffect(() => {
+    console.log(`Station ${effectiveStationId} Connection State:`, connectionState);
     if (connectionState === "connected") {
       // Subscribe to commands
-      const topics = mqttTopics.station(stationId);
+      const topics = mqttTopics.station(effectiveStationId);
+      console.log(`Station ${effectiveStationId} Subscribing to:`, topics.command);
       subscribe([
         { topic: topics.command, qos: 1 },
         { topic: topics.status, qos: 1 }, // Listen for status updates (Finished)
       ]);
 
       // Publish Hello to request config
+      console.log(`Station ${effectiveStationId} Publishing Hello to:`, topics.hello);
       publish({
         topic: topics.hello,
         payload: {
-          deviceId: stationId,
+          deviceId: effectiveStationId,
           role: "station",
           ts: Date.now(),
         },
@@ -62,7 +74,7 @@ export function useStationController({ stationId, brokerUrl }: StationController
     } else {
       setStationState("DISCONNECTED");
     }
-  }, [connectionState, stationId, subscribe, publish]);
+  }, [connectionState, effectiveStationId, subscribe, publish]);
 
   // Handle Incoming Messages
   useEffect(() => {
@@ -116,12 +128,12 @@ export function useStationController({ stationId, brokerUrl }: StationController
     if (!activeOrder) return;
 
     // Publish Start Event to Master
-    const topic = mqttTopics.station(stationId).events;
+    const topic = mqttTopics.station(effectiveStationId).events;
     publish({
       topic,
       payload: {
         type: "start_request",
-        deviceId: stationId,
+        deviceId: effectiveStationId,
         orderId: activeOrder.orderId,
         ts: Date.now(),
       },
@@ -129,7 +141,7 @@ export function useStationController({ stationId, brokerUrl }: StationController
 
     // Optimistically switch to PROCESSING (Master will confirm with GPIO)
     setStationState("PROCESSING");
-  }, [publish, stationId, activeOrder]);
+  }, [publish, effectiveStationId, activeOrder]);
 
   const handleReset = useCallback(() => {
     setStationState("IDLE");

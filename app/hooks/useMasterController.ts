@@ -4,12 +4,15 @@ import { useEffect, useCallback } from "react";
 import { useMqttClient } from "../lib/mqtt/useMqttClient";
 import { mqttTopics } from "../lib/mqtt/topics";
 import type { IncomingMessage } from "../lib/mqtt/types";
+import { getMqttConfigFromEnv } from "../lib/mqtt/config";
 import coffees from "../data/coffees.json";
 
 // We assume Master is unique, role='master'
 const MQTT_URL = process.env.NEXT_PUBLIC_MQTT_URL || "ws://192.168.1.9:3000";
 
 export function useMasterController() {
+  const envConfig = getMqttConfigFromEnv();
+
   const {
     client,
     state: connectionState,
@@ -17,9 +20,11 @@ export function useMasterController() {
     publish,
     messages,
   } = useMqttClient({
-    url: MQTT_URL,
-    clientId: "master-screen",
-    role: "master",
+    ...envConfig,
+    role: "master", // Enforce role
+    clientId: "master-screen", // Override client ID to distinguish from station config if default matches?
+    // Actually, getting ID from env might be better to avoid conflict if multiple tabs.
+    // But keeping "master-screen" as fixed ID for the controller seems safe for now.
   });
 
   // Subscribe to all stations
