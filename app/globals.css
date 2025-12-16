@@ -29,6 +29,7 @@
   --color-black-6: rgba(0, 0, 0, 0.4);
   --color-black-7: rgba(0, 0, 0, 0.48);
   --color-black-8: rgba(0, 0, 0, 0.64);
+  --breakpoint-md: 800px;
 }
 
 /* keyframe for w 0 to 100 then  */

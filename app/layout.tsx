@@ -4,6 +4,11 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Kahve Makinesi",
   description: "Kahve makinesi arayüzü",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Kardora",
+  },
 };
 
 export default function RootLayout({

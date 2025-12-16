@@ -59,8 +59,8 @@ export default function OrderPage() {
   };
 
   return (
-    <main className="min-h-screen w-full bg-white flex items-center justify-center p-8 overflow-auto">
-      <div className="w-[800px] h-[1280px] relative bg-quaternary overflow-hidden shrink-0">
+    <main className="min-h-screen w-full bg-white flex items-center justify-center p-0 md:p-8 overflow-auto">
+      <div className="w-full h-[100dvh] md:w-[800px] md:h-[1280px] relative bg-quaternary overflow-hidden shrink-0 flex flex-col">
         {/* Sliding Container */}
         <Navbar
           backgroundColor="bg-black-2"
@@ -70,14 +70,14 @@ export default function OrderPage() {
           onBack={handleBack}
         />
         <div
-          className="flex w-[200%] h-full transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)]"
+          className="flex flex-1 w-[200%] h-full transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)]"
           style={{ transform: activeView === "list" ? "translateX(0)" : "translateX(-50%)" }}
         >
           {/* LIST VIEW (Left Half) */}
           <div className="w-1/2 h-full flex flex-col items-center overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {/* Content Grid */}
-            <div className="w-full max-w-[800px] px-6 pb-24 pt-32">
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-2">
+            <div className="w-full max-w-[800px] px-4 md:px-6 pb-24 pt-32">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {coffees.map((coffee) => (
                   <div key={coffee.id} onClick={() => handleCoffeeClick(coffee as Coffee)}>
                     {/* Wrapping in div to handle click without refactoring Card props yet, 

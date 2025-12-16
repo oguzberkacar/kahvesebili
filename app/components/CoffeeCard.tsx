@@ -36,7 +36,7 @@ export default function CoffeeCard({ coffee }: CoffeeCardProps) {
   const currencySymbol = coffee.currency?.symbol ?? "$";
 
   return (
-    <div className="w-full bg-white rounded-[24px] w-[360px] p-3 pb-6 flex flex-col items-center gap-4 relative active:scale-90 transition-transform duration-200 cursor-pointer">
+    <div className="bg-white rounded-[24px] w-full max-w-[360px] p-3 pb-6 flex flex-col items-center gap-4 relative active:scale-90 transition-transform duration-200 cursor-pointer">
       {/* Image Container */}
       <div className="relative bg-quaternary rounded-[20px] w-full h-[316px] overflow-hidden flex items-center justify-center">
         <Image
