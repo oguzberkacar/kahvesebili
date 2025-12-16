@@ -42,7 +42,7 @@ export function useStationController({ stationId, brokerUrl }: StationController
     url: brokerUrl || envConfig.url,
     role: "station",
     deviceId: effectiveStationId,
-    clientId: effectiveStationId + "_" + Math.random().toString(16).slice(2, 8),
+    clientId: effectiveStationId, // Use exact station ID for ACL compatibility (no random suffix)
   });
 
   // Handle Connection State
