@@ -1,5 +1,4 @@
 "use client";
-import React from "react";
 import React, { useEffect } from "react";
 import Link from "next/link";
 import KardoraBaseLogo from "../components/KardoraBaseLogo";
@@ -15,20 +14,48 @@ import useDeviceType from "../hooks/useDeviceType";
 import { useMaster } from "../context/MasterContext";
 import { cn } from "@/lib/utils";
 
+// Debug Component
+function DebugOverlay() {
+  const [logs, setLogs] = React.useState<string[]>([]);
+
+  useEffect(() => {
+    const originalLog = console.log;
+    console.log = (...args) => {
+      setLogs((prev) => [args.join(" "), ...prev].slice(0, 5));
+      originalLog(...args);
+    };
+    return () => {
+      console.log = originalLog;
+    };
+  }, []);
+
+  return (
+    <div className="fixed top-0 left-0 bg-black/80 text-white p-2 text-xs z-[9999] w-64 pointer-events-none font-mono">
+      {logs.map((L, i) => (
+        <div key={i} className="mb-1 border-b border-white/20 pb-1">
+          {L}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function SiparisPage() {
   const [showSplash, setShowSplash] = React.useState(true);
   const deviceType = useDeviceType();
   const { sendOrder } = useMaster(); // Ensure hook is active
-  
+
   return (
-    <div className="w-full h-screen bg-[#EBEBEB] flex justify-center items-center overflow-hidden">
-      <DebugOverlay />
-      <div
-        className={cn(
-          "bg-[#EBEBEB] relative flex flex-col items-center",
-          deviceType === "fixed" ? "w-[800px] h-[1280px]" : "w-full h-full max-w-[800px]"
-        )}
-      >
+    <>
+      {showSplash && <SplashOverlay onFinish={() => setShowSplash(false)} />}
+      <div className="w-full h-screen bg-[#EBEBEB] flex justify-center items-center overflow-hidden relative">
+        <DebugOverlay />
+        <div
+          className={cn(
+            "bg-[#EBEBEB] relative flex flex-col items-center shadow-2xl overflow-hidden",
+            deviceType === "fixed" ? "w-[800px] h-[1280px]" : "w-full h-full max-w-[800px]"
+          )}
+        >
           <Navbar backgroundColor="bg-white-9" textColor="text-fi" />
           <div className="w-full h-full flex flex-col items-center justify-center gap-12 md:gap-[135px]">
             <div className="scale-75 md:scale-100 transition-transform">
@@ -51,7 +78,7 @@ export default function SiparisPage() {
             </div>
           </div>
         </div>
-      </main>
+      </div>
     </>
   );
 }
