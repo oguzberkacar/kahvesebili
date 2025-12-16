@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_DEVICE_ID:
       process.env.STATION_ID || process.env.NEXT_PUBLIC_DEVICE_ID || fallbackDeviceId,
   },
+  output: "standalone",
 };
 
 export default nextConfig;
