@@ -1,118 +1,121 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
-import { exec } from "child_process";
+import { execFile } from "child_process";
 import util from "util";
 
-const execAsync = util.promisify(exec);
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+const execFileAsync = util.promisify(execFile);
+
+// Raspi 4 Bookworm / libgpiod v2.x
+const CHIP = process.env.GPIO_CHIP || "gpiochip0";
+
+// BCM pin aralığı (Pi 4 header: 0-27 en yaygın; ama chip0 0-57)
+const MIN_PIN = 0;
+const MAX_PIN = 57;
+
+// Güvenli süre aralığı
+const MIN_MS = 20;
+const MAX_MS = 60_000;
+
+function toInt(v: any, fallback: number) {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.trunc(n) : fallback;
+}
+
+function clamp(n: number, min: number, max: number) {
+  return Math.max(min, Math.min(n, max));
+}
+
+/**
+ * libgpiod v2 gpioset time arg:
+ *  -t 2s,0   (2 saniye HIGH, sonra toggle/release => LOW)
+ *  -t 500ms,0
+ */
+function toGpiosetTimeArg(durationMs: number) {
+  const d = clamp(durationMs, MIN_MS, MAX_MS);
+
+  if (d >= 1000) {
+    const sec = Math.ceil(d / 1000);
+    return `${sec}s,0`;
+  }
+  return `${d}ms,0`;
+}
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
-  const pin = parseInt(body.pin || 14);
-  const duration = parseInt(body.duration || 10000);
 
-  console.log(`[GPIO] Request to trigger Pin ${pin} for ${duration}ms`);
+  const pin = clamp(toInt(body.pin, 17), MIN_PIN, MAX_PIN);
+  const duration = clamp(toInt(body.duration, 2000), MIN_MS, MAX_MS);
 
-  // Helper to run shell command
-  const runCommand = async (cmd: string) => {
-    try {
-      await execAsync(cmd);
-      return true;
-    } catch (e) {
-      console.warn(`[GPIO] Command failed: ${cmd}`, e);
-      return false;
-    }
-  };
+  // value: 1 => HIGH pulse, 0 => LOW (force)
+  const valueRaw = body.value;
+  const hasValue = valueRaw === 0 || valueRaw === 1;
+  const value = hasValue ? valueRaw : 1;
 
   try {
-    if (process.platform === "linux") {
-      let methodUsed = "none";
-
-      // 1. Try 'onoff' library first
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const onoff = eval("require")("onoff");
-        const Gpio = onoff.Gpio;
-
-        if (Gpio.accessible) {
-          const gpioPin = new Gpio(pin, "out");
-          gpioPin.writeSync(1);
-          console.log(`[GPIO] 'onoff' Set Pin ${pin} HIGH`);
-
-          setTimeout(() => {
-            gpioPin.writeSync(0);
-            gpioPin.unexport();
-            console.log(`[GPIO] 'onoff' Set Pin ${pin} LOW`);
-          }, duration);
-
-          methodUsed = "onoff";
-        }
-      } catch (e: any) {
-        console.error(`[GPIO] 'onoff' failed (${e.code || e.message}). Trying fallbacks...`);
-      }
-
-      // 2. Fallback: 'pinctrl' (RPi 5 / Bookworm)
-      if (methodUsed === "none") {
-        console.log(`[GPIO] Trying 'pinctrl' fallback...`);
-        // op = output, dh = driving high
-        const success = await runCommand(`pinctrl set ${pin} op dh`);
-        if (success) {
-          methodUsed = "pinctrl";
-          setTimeout(() => runCommand(`pinctrl set ${pin} op dl`), duration);
-        }
-      }
-
-      // 3. Fallback: 'gpio' (Legacy / WiringPi)
-      if (methodUsed === "none") {
-        console.log(`[GPIO] Trying 'gpio' fallback...`);
-        // -g = BCM numbering
-        const success = await runCommand(`gpio -g mode ${pin} out && gpio -g write ${pin} 1`);
-        if (success) {
-          methodUsed = "gpio";
-          setTimeout(() => runCommand(`gpio -g write ${pin} 0`), duration);
-        }
-      }
-
-      // 4. Fallback: 'gpioset' (libgpiod)
-      if (methodUsed === "none") {
-        console.log(`[GPIO] Trying 'gpioset' fallback...`);
-        // 0 is usually the chip for main headers on Pi 4/5
-        const success = await runCommand(`gpioset 0 ${pin}=1`);
-        if (success) {
-          methodUsed = "gpioset";
-          setTimeout(() => runCommand(`gpioset 0 ${pin}=0`), duration);
-        }
-      }
-
-      // 5. Fallback: Python script (Best for RPi 5)
-      if (methodUsed === "none") {
-        console.log(`[GPIO] Trying 'python3' fallback...`);
-        // Assumes scripts/trigger.py exists in project root
-        const success = await runCommand(`python3 scripts/trigger.py ${pin} ${duration}`);
-        if (success) {
-          methodUsed = "python";
-          // Python script handles the timeout/sleep internally, so we assume done.
-        }
-      }
-
-      if (methodUsed === "none") {
-        throw new Error("All GPIO methods failed (onoff, pinctrl, gpio, gpioset, python). Check hardware/permissions.");
-      }
-
-      return NextResponse.json({ success: true, message: `Pin ${pin} triggered via ${methodUsed}` });
-    } else {
-      // Mock for Mac/Windows Development
-      console.log(`-----------------------------------------------`);
-      console.log(`[MOCK GPIO] SIMULATING PIN ${pin} HIGH (ON)`);
-      console.log(`[MOCK GPIO] Will turn off in ${duration}ms...`);
-
-      setTimeout(() => {
-        console.log(`[MOCK GPIO] SIMULATING PIN ${pin} LOW (OFF)`);
-        console.log(`-----------------------------------------------`);
-      }, duration);
-
-      return NextResponse.json({ success: true, message: `[MOCK] Pin ${pin} triggered` });
+    // DEV / Mac / Windows -> MOCK
+    if (process.platform !== "linux") {
+      console.log(`[MOCK GPIO] pin=${pin} value=${value} duration=${duration}ms`);
+      return NextResponse.json({
+        success: true,
+        mocked: true,
+        pin,
+        value,
+        durationMs: duration,
+      });
     }
+
+    // ✅ 1) Eğer value=0 istenmişse: direkt LOW (no timer)
+    // gpioset komutu process boyunca tutar; ama LOW için hızlıca uygular ve çıkar.
+    if (value === 0) {
+      await execFileAsync(
+        "gpioset",
+        ["-c", CHIP, `${pin}=0`],
+        { timeout: 3000 }
+      );
+
+      return NextResponse.json({
+        success: true,
+        method: "gpioset",
+        chip: CHIP,
+        pin,
+        value: 0,
+        durationMs: 0,
+      });
+    }
+
+    // ✅ 2) HIGH pulse (fail-safe): -t <duration>,0
+    const tArg = toGpiosetTimeArg(duration);
+
+    await execFileAsync(
+      "gpioset",
+      ["-c", CHIP, "-t", tArg, `${pin}=1`],
+      { timeout: duration + 5000 }
+    );
+
+    return NextResponse.json({
+      success: true,
+      method: "gpioset",
+      chip: CHIP,
+      pin,
+      value: 1,
+      durationMs: duration,
+      timeArg: tArg,
+    });
   } catch (error: any) {
     console.error("[GPIO Error]", error);
-    return NextResponse.json({ success: false, error: error.message || "Failed to trigger GPIO" }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        error: error?.message || "Failed to trigger GPIO",
+        platform: process.platform,
+        hint:
+          "If permission denied: add user to gpio group (sudo usermod -aG gpio <user> then relog). " +
+          "Also verify chip name (gpiochip0) and BCM pin number.",
+      },
+      { status: 500 }
+    );
   }
 }
