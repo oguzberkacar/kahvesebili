@@ -50,6 +50,7 @@ export function useMaster() {
     // Better to return a lightweight fallback to prevent crashes if accidentally used.
     console.warn("useMaster used outside MasterProvider or on Station device");
     return {
+      activeStations: [] as string[],
       connectionState: "idle" as const,
       sendOrder: () => console.warn("Cannot send order: Not Master"),
     };

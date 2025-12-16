@@ -4,6 +4,7 @@ import coffees from "../data/coffees.json";
 import CoffeeCard from "../components/CoffeeCard";
 import CoffeeDetail from "../components/CoffeeDetail";
 import Navbar from "../components/Navbar";
+import { cn } from "@/lib/utils";
 import { useMaster } from "../context/MasterContext";
 
 export interface Sizes {
@@ -14,6 +15,8 @@ export interface Sizes {
 
 export interface Coffee {
   id: string;
+  stationId: number;
+  pin: number;
   name: string;
   image: string;
   imageRaw: string;
