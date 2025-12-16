@@ -45,54 +45,62 @@ export function useStationController({ stationId, brokerUrl }: StationController
     clientId: effectiveStationId, // Use exact station ID for ACL compatibility (no random suffix)
   });
 
-  // Handle Connection State
+  // 1. Handle Subscription (Once on Connect)
   useEffect(() => {
-    console.log(`Station ${effectiveStationId} Connection State:`, connectionState);
     if (connectionState === "connected") {
-      // Subscribe to commands
       const topics = mqttTopics.station(effectiveStationId);
       console.log(`Station ${effectiveStationId} Subscribing to:`, topics.command);
       subscribe([
         { topic: topics.command, qos: 0 },
-        { topic: topics.status, qos: 0 }, // Listen for status updates (Finished)
+        { topic: topics.status, qos: 0 },
       ]);
-
-      // Publish Hello to request config
-      console.log(`Station ${effectiveStationId} Publishing Hello to:`, topics.hello);
-      publish({
-        topic: topics.hello,
-        payload: {
-          deviceId: effectiveStationId,
-          role: "station",
-          ts: Date.now(),
-        },
-      });
-
-      // If we don't have config yet, we are effectively waiting (DISCONNECTED/LOADING UI or disabled)
-      // But if we already have config locally (maybe persisted), we could go IDLE.
-      // For now, wait for Master to send config or we can implement local fallback lookup here if needed.
     } else {
       setStationState("DISCONNECTED");
     }
-  }, [connectionState, effectiveStationId, subscribe, publish]);
+  }, [connectionState, effectiveStationId, subscribe]);
+
+  // 2. Handle Handshake (Retry Hello until Configured)
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (connectionState === "connected" && !coffeeConfig) {
+      const topics = mqttTopics.station(effectiveStationId);
+
+      const sendHello = () => {
+        console.log(`Station ${effectiveStationId} sending Hello (waiting for config)...`);
+        publish({
+          topic: topics.hello,
+          payload: {
+            deviceId: effectiveStationId,
+            role: "station",
+            ts: Date.now(),
+          },
+        });
+      };
+
+      // Send immediately
+      sendHello();
+      // Retry every 3 seconds
+      interval = setInterval(sendHello, 3000);
+    }
+
+    return () => clearInterval(interval);
+  }, [connectionState, coffeeConfig, effectiveStationId, publish]);
 
   // Handle Incoming Messages
   useEffect(() => {
     if (messages.length === 0) return;
     const lastMsg = messages[messages.length - 1];
-    console.log("Station Received Message:", lastMsg);
     handleMessage(lastMsg);
   }, [messages]);
 
   const handleMessage = useCallback((msg: IncomingMessage) => {
     try {
-      console.log("Processing Message Topic:", msg.topic);
       const payload: any = msg.json || JSON.parse(msg.payload);
-      console.log("Processing Message Payload:", payload);
 
       // 1. Config Message (Set Coffee Info)
       if (payload.type === "set_config") {
-        console.log("Setting Config:", payload.coffee);
+        console.log("Config Received:", payload.coffee.name);
         setCoffeeConfig(payload.coffee);
         setStationState("IDLE");
         return;

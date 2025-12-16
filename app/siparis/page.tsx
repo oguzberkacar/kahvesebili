@@ -22,11 +22,11 @@ export default function SiparisPage() {
   return (
     <>
       {showSplash && <SplashOverlay onFinish={() => setShowSplash(false)} />}
-      <div className="w-full h-screen bg-[#EBEBEB] flex justify-center items-center overflow-hidden relative">
+      <main className="min-h-screen w-full bg-white flex items-center justify-center  overflow-auto">
         <div
           className={cn(
-            "bg-[#EBEBEB] relative flex flex-col items-center shadow-2xl overflow-hidden",
-            deviceType === "fixed" ? "w-[800px] h-[1280px]" : "w-full h-full max-w-[800px]"
+            "  relative bg-secondary text-white flex flex-col items-center justify-center shrink-0 md:border-4 border-gray-800 shadow-2xl overflow-hidden",
+            deviceType === "fixed" ? "w-[800px] h-[1280px]" : "w-full h-dvh"
           )}
         >
           <Navbar backgroundColor="bg-white-9" textColor="text-fi" />
@@ -51,7 +51,7 @@ export default function SiparisPage() {
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </>
   );
 }
