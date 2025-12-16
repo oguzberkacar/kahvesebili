@@ -1,32 +1,34 @@
 "use client";
 import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import KardoraBaseLogo from "../components/KardoraBaseLogo";
 import OrderHereGraphic from "../components/OrderHereGraphic";
 import TransitionRibbon from "../components/TransitionRibbon";
 import ArrowIcon from "../components/ArrowIcon";
 import Reserved from "../components/Reserved";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import SplashOverlay from "../components/SplashOverlay";
 import Navbar from "../components/Navbar";
 import useDeviceType from "../hooks/useDeviceType";
+import { useMaster } from "../context/MasterContext";
 import { cn } from "@/lib/utils";
 
 export default function SiparisPage() {
   const [showSplash, setShowSplash] = React.useState(true);
-
   const deviceType = useDeviceType();
-  const isFixed = deviceType === "fixed";
-
+  const { sendOrder } = useMaster(); // Ensure hook is active
+  
   return (
-    <>
-      {showSplash && <SplashOverlay onFinish={() => setShowSplash(false)} />}
-      <main className="min-h-screen w-full bg-white flex items-center justify-center  overflow-auto">
-        <div
-          className={cn(
-            "  relative bg-secondary text-white flex flex-col items-center justify-center shrink-0 md:border-4 border-gray-800 shadow-2xl overflow-hidden",
-            isFixed ? "w-[800px] h-[1280px]" : "w-full h-dvh"
-          )}
-        >
+    <div className="w-full h-screen bg-[#EBEBEB] flex justify-center items-center overflow-hidden">
+      <DebugOverlay />
+      <div
+        className={cn(
+          "bg-[#EBEBEB] relative flex flex-col items-center",
+          deviceType === "fixed" ? "w-[800px] h-[1280px]" : "w-full h-full max-w-[800px]"
+        )}
+      >
           <Navbar backgroundColor="bg-white-9" textColor="text-fi" />
           <div className="w-full h-full flex flex-col items-center justify-center gap-12 md:gap-[135px]">
             <div className="scale-75 md:scale-100 transition-transform">
