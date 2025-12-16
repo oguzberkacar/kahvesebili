@@ -22,7 +22,8 @@ type StationControllerProps = {
 export function useStationController({ stationId, brokerUrl }: StationControllerProps = {}) {
   const [stationState, setStationState] = useState<StationState>("DISCONNECTED");
   const [coffeeConfig, setCoffeeConfig] = useState<any>(null); // The coffee info
-  const [activeOrder, setActiveOrder] = useState<CommandMessage | null>(null);
+  const [orders, setOrders] = useState<CommandMessage[]>([]);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   // Get defaults from env
   const envConfig = getMqttConfigFromEnv();
@@ -104,11 +105,18 @@ export function useStationController({ stationId, brokerUrl }: StationController
           return;
         }
 
-        // 2. Order Command (Show Order Screen)
-        // If it has orderId and size, it's an order command
+        // 2. Order Command (Add to Queue)
         if (payload.orderId && payload.size) {
-          setActiveOrder(payload);
-          setStationState("ORDER_RECEIVED");
+          setOrders((prev) => {
+            // Avoid duplicates
+            if (prev.find((o) => o.orderId === payload.orderId)) return prev;
+            return [...prev, payload];
+          });
+
+          setStationState((prev) => {
+            if (prev === "IDLE" || prev === "COMPLETED") return "ORDER_RECEIVED";
+            return prev;
+          });
           return;
         }
 
@@ -116,22 +124,43 @@ export function useStationController({ stationId, brokerUrl }: StationController
         // Master might send { status: 'processing' } or { status: 'completed' }
         if (payload.status === "processing") {
           // Master acknowledged start
-          // We might already be in PROCESSING, but good to confirm
           setStationState("PROCESSING");
         } else if (payload.status === "completed") {
           setStationState("COMPLETED");
 
+          // Remove completed order from queue
+          setOrders((prev) => {
+            // We need to know WHICH order completed.
+            // Since tracking is loose, we assume the 'selectedOrderId' completed.
+            // But we can't access selectedOrderId easily in this callback without dependency.
+            // We'll update logical state here, and use logic in render/effects to cleanup.
+            // Actually, simplest is:
+            return prev.filter((o) => o.orderId !== selectedOrderId);
+          });
+
+          // Reset selection
+          setSelectedOrderId(null);
+
           // Auto reset after 30s
           setTimeout(() => {
-            setStationState((curr) => (curr === "COMPLETED" ? "IDLE" : curr));
-            setActiveOrder(null);
+            setStationState((curr) => {
+              if (curr === "COMPLETED") {
+                // Return to ORDER_RECEIVED if orders exist, else IDLE
+                // Since we can't see 'orders' here easily due to closure (unless added to dep),
+                // we rely on the component re-render or check updated state.
+                // This timeout closure captures OLD state.
+                // We need a better reset, or just set to IDLE and let the effect promote to ORDER_RECEIVED if queue > 0.
+                return "IDLE";
+              }
+              return curr;
+            });
           }, 30000);
         }
       } catch (e) {
         console.error("Failed to parse station message", e);
       }
     },
-    [effectiveStationId, publish, coffeeConfig]
+    [effectiveStationId, publish, coffeeConfig, selectedOrderId]
   );
 
   // 2. Handle Handshake (Retry Hello until Configured)
@@ -169,9 +198,18 @@ export function useStationController({ stationId, brokerUrl }: StationController
     handleMessage(lastMsg);
   }, [messages, handleMessage]);
 
+  // If we have orders but are IDLE, move to ORDER_RECEIVED
+  useEffect(() => {
+    if (orders.length > 0 && stationState === "IDLE") {
+      setStationState("ORDER_RECEIVED");
+    }
+  }, [orders, stationState]);
+
   // Actions
   const handleStartOrder = useCallback(() => {
-    if (!activeOrder) return;
+    if (!selectedOrderId) return;
+    const order = orders.find((o) => o.orderId === selectedOrderId);
+    if (!order) return;
 
     // Publish Start Event to Master
     const topic = mqttTopics.station(effectiveStationId).events;
@@ -180,26 +218,33 @@ export function useStationController({ stationId, brokerUrl }: StationController
       payload: {
         type: "start_request",
         deviceId: effectiveStationId,
-        orderId: activeOrder.orderId,
+        orderId: order.orderId,
         ts: Date.now(),
-        price: activeOrder.price,
+        price: order.price,
       },
     });
 
     // Optimistically switch to PROCESSING (Master will confirm with GPIO)
     setStationState("PROCESSING");
-  }, [publish, effectiveStationId, activeOrder]);
+  }, [publish, effectiveStationId, orders, selectedOrderId]);
 
   const handleReset = useCallback(() => {
     setStationState("IDLE");
-    setActiveOrder(null);
+    setOrders([]);
+    setSelectedOrderId(null);
+  }, []);
+
+  const handleSelectOrder = useCallback((id: string) => {
+    setSelectedOrderId(id);
   }, []);
 
   return {
     stationState,
     coffeeConfig,
-    activeOrder,
+    orders,
+    selectedOrderId,
     handleStartOrder,
+    handleSelectOrder,
     handleReset,
     connectionState,
   };
