@@ -4,6 +4,7 @@ import coffees from "../data/coffees.json";
 import CoffeeCard from "../components/CoffeeCard";
 import CoffeeDetail from "../components/CoffeeDetail";
 import Navbar from "../components/Navbar";
+import { useMaster } from "../context/MasterContext";
 
 export interface Sizes {
   small: { price: number; volume: string };
@@ -36,7 +37,14 @@ export default function OrderPage() {
   const [isPaymentView, setIsPaymentView] = useState(false);
   const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
 
+  // Get active stations from Master Context
+  const { activeStations } = useMaster();
+
+  // Filter coffees
+  const activeCoffees = coffees.filter((c) => activeStations.includes(`station${c.stationId}`));
+
   const handleCoffeeClick = (coffee: Coffee) => {
+    //...
     setSelectedCoffee(coffee);
     setActiveView("detail");
   };
@@ -78,16 +86,18 @@ export default function OrderPage() {
             {/* Content Grid */}
             <div className="w-full max-w-[800px] px-4 md:px-6 pb-24 pt-32">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {coffees.map((coffee) => (
-                  <div key={coffee.id} onClick={() => handleCoffeeClick(coffee as Coffee)}>
-                    {/* Wrapping in div to handle click without refactoring Card props yet, 
-                       though better to pass onClick to Card for accessibility. 
-                       For now, div wrapper works for the "click anywhere on card" requirement. 
-                       User asked for 'card scale down', we'll handle that via Card interaction later or active state.
-                   */}
-                    <CoffeeCard coffee={coffee as Coffee} />
+                {activeCoffees.length > 0 ? (
+                  activeCoffees.map((coffee) => (
+                    <div key={coffee.id} onClick={() => handleCoffeeClick(coffee as Coffee)}>
+                      <CoffeeCard coffee={coffee as Coffee} />
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-1 md:col-span-2 flex flex-col items-center justify-center text-gray-500 py-20">
+                    <p className="text-xl">Waiting for active stations...</p>
+                    <p className="text-sm">Connect a station to see coffees.</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>
