@@ -25,15 +25,15 @@
         },
         "sizes": {
             "small": {
-                "price": 85,
+                "price": 285,
                 "volume": "250ml"
             },
             "medium": {
-                "price": 95,
+                "price": 310,
                 "volume": "350ml"
             },
             "large": {
-                "price": 110,
+                "price": 345,
                 "volume": "500ml"
             }
         }
@@ -64,15 +64,15 @@
         },
         "sizes": {
             "small": {
-                "price": 85,
+                "price": 275,
                 "volume": "250ml"
             },
             "medium": {
-                "price": 95,
+                "price": 300,
                 "volume": "350ml"
             },
             "large": {
-                "price": 110,
+                "price": 340,
                 "volume": "500ml"
             }
         }
@@ -103,15 +103,15 @@
         },
         "sizes": {
             "small": {
-                "price": 80,
+                "price": 260,
                 "volume": "250ml"
             },
             "medium": {
-                "price": 90,
+                "price": 290,
                 "volume": "350ml"
             },
             "large": {
-                "price": 105,
+                "price": 310,
                 "volume": "500ml"
             }
         }
@@ -142,15 +142,15 @@
         },
         "sizes": {
             "small": {
-                "price": 85,
+                "price": 260,
                 "volume": "250ml"
             },
             "medium": {
-                "price": 95,
+                "price": 290,
                 "volume": "350ml"
             },
             "large": {
-                "price": 110,
+                "price": 310,
                 "volume": "500ml"
             }
         }

@@ -139,8 +139,8 @@ export default function OrderPage() {
                 className={cn("grid grid-cols-1 gap-4 md:grid-cols-2", deviceType !== "fixed" ? "gap-4 lg:gap-12" : "gap-4")}
               >
                 {coffees.map((coffee) => {
-                  const isActive = activeStations.includes(`station${coffee.stationId}`);
-                  // const isActive = true;
+                  // const isActive = activeStations.includes(`station${coffee.stationId}`);
+                  const isActive = true;
                   return (
                     <div
                       key={coffee.id}
