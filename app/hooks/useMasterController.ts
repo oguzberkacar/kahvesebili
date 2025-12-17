@@ -41,19 +41,16 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
   useEffect(() => {
     if (connectionState === "connected") {
       // Wildcards might be blocked by ACL. Subscribe explicitly to known stations.
-      const explicitSubscriptions: { topic: string; qos: 0 | 1 | 2 }[] = [];
-      const KNOWN_STATIONS = ["station1", "station2", "station3", "station4", "station5"];
-
-      KNOWN_STATIONS.forEach((id) => {
-        explicitSubscriptions.push({ topic: mqttTopics.station(id).hello, qos: 0 });
-        explicitSubscriptions.push({ topic: mqttTopics.station(id).events, qos: 0 });
-      });
-
       subscribe([
-        ...explicitSubscriptions,
-        // { topic: mqttTopics.master.helloAll, qos: 0 }, // Wildcard blocked
-        // { topic: mqttTopics.master.eventsAll, qos: 0 }, // Wildcard blocked
+        { topic: "station/+/hello", qos: 0 },
+        { topic: "station/+/events", qos: 0 },
       ]);
+
+      // subscribe([
+      //   ...explicitSubscriptions,
+      //   // { topic: mqttTopics.master.helloAll, qos: 0 }, // Wildcard blocked
+      //   // { topic: mqttTopics.master.eventsAll, qos: 0 }, // Wildcard blocked
+      // ]);
 
       // Proactive Discovery: Ask "Who is there?"
       // console.log("Master connected. Broadcasting discovery...");
