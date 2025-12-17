@@ -153,13 +153,13 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
             const duration = isCold ? 7000 : 6000;
 
             // 2b. Trigger GPIO API
-            console.log(
-              `[Master] Triggering GPIO for PIN ${coffee.pin} with duration ${duration}ms (${isCold ? "Cold" : "Hot"})`
-            );
+            const payload = { pin: coffee.pin, duration, value: 1 };
+            console.log(`[Master] Triggering GPIO:`, payload, `(isCold: ${isCold})`);
+
             fetch("/api/gpio", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ pin: coffee.pin, duration, value: 1 }),
+              body: JSON.stringify(payload),
             })
               .then(async (res) => {
                 const success = res.ok;
