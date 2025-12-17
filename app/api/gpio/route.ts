@@ -68,38 +68,17 @@ export async function POST(request: Request) {
       });
     }
 
-    // ✅ 0) Hold HIGH (no timer) if requested
-    // -t 0s ile hemen set edip çıkması sağlanır
-    if (hold && value === 1) {
-      await execFileAsync("gpioset", ["-c", CHIP, "-t", "0s", `${pin}=1`], { timeout: 3000 });
-
-      return NextResponse.json({
-        success: true,
-        method: "gpioset",
-        chip: CHIP,
-        pin,
-        value: 1,
-        durationMs: 0,
-        hold: true,
-      });
+    // ✅ 1) Instant set (Start/Stop manually without timer if needed)
+    // If hold=true OR duration=0, set immediately and exit?
+    // For now, if hold is true, we ignore duration.
+    if (hold) {
+      console.log(`Executing gpioset (HOLD): -c ${CHIP} -t 0s ${pin}=${value}`);
+      await execFileAsync("gpioset", ["-c", CHIP, "-t", "0s", `${pin}=${value}`], { timeout: 3000 });
+      return NextResponse.json({ success: true, method: "gpioset", chip: CHIP, pin, value, durationMs: 0, hold: true });
     }
 
-    // ✅ 1) Eğer value=0 istenmişse: direkt LOW (no timer)
-    // -t 0s,0 ile hemen set edip çıkması sağlanır
-    if (value === 0) {
-      await execFileAsync("gpioset", ["-c", CHIP, "-t", "0s", `${pin}=0`], { timeout: 3000 });
-
-      return NextResponse.json({
-        success: true,
-        method: "gpioset",
-        chip: CHIP,
-        pin,
-        value: 0,
-        durationMs: 0,
-      });
-    }
-
-    // ✅ 2) HIGH pulse (fail-safe): -t <duration>,0
+    // ✅ 2) Pulse (Timed) logic for BOTH value=1 and value=0
+    // If value=0, we pull LOW for duration, then release (toggle).
     const tArg = toGpiosetTimeArg(duration);
 
     console.log(`Executing gpioset: -c ${CHIP} -t ${tArg} ${pin}=${value}`);
