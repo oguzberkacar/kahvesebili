@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import coffees from "../data/coffees.json";
 import CoffeeCard from "../components/CoffeeCard";
 import CoffeeDetail from "../components/CoffeeDetail";
@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useMaster } from "../context/MasterContext";
 import useDeviceType from "../hooks/useDeviceType";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export interface Sizes {
   small: { price: number; volume: string };
@@ -42,6 +43,34 @@ export default function OrderPage() {
   const [isPaymentView, setIsPaymentView] = useState(false);
   const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
   const router = useRouter();
+
+  // Inactivity Timer
+  useEffect(() => {
+    // Only run on client
+    if (typeof window !== "undefined") {
+      let timeout: string | number | NodeJS.Timeout | undefined;
+
+      const resetTimer = () => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+          router.push("/siparis");
+        }, 30000);
+      };
+
+      // Initial start
+      resetTimer();
+
+      // Event listeners
+      const events = ["click", "mousemove", "touchstart", "scroll", "keydown"];
+      events.forEach((event) => window.addEventListener(event, resetTimer));
+
+      // Cleanup
+      return () => {
+        clearTimeout(timeout);
+        events.forEach((event) => window.removeEventListener(event, resetTimer));
+      };
+    }
+  }, [router]);
 
   // Get active stations from Master Context
   const { activeStations } = useMaster();
@@ -91,6 +120,8 @@ export default function OrderPage() {
           showBackButton={activeView === "detail" && !isPaymentSuccess}
           onBack={handleBack}
         />
+        <Link href="/siparis" className=" absolute top-4 left-4 w-50 h-20 z-100" />
+
         <div
           className="flex flex-1 w-[200%] h-full transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)]"
           style={{ transform: activeView === "list" ? "translateX(0)" : "translateX(-50%)" }}
