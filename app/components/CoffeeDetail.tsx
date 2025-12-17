@@ -79,6 +79,9 @@ export default function CoffeeDetail({
         // Assuming stationId mapping: 1 -> "station1"
         const targetStationId = `station${coffee.stationId}`;
         const price = coffee.sizes[selectedSize]?.price || 0;
+
+        console.log("Sending order from Details:", { targetStationId, orderId: newOrderNumber });
+
         sendOrder(targetStationId, {
           orderId: newOrderNumber,
           size: selectedSize,
