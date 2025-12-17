@@ -58,9 +58,7 @@ export async function POST(request: Request) {
   try {
     // DEV / Mac / Windows -> MOCK
     if (process.platform !== "linux") {
-      console.log(
-        `[MOCK GPIO] pin=${pin} value=${value} duration=${duration}ms hold=${hold}`
-      );
+      console.log(`[MOCK GPIO] pin=${pin} value=${value} duration=${duration}ms hold=${hold}`);
       return NextResponse.json({
         success: true,
         mocked: true,
@@ -74,11 +72,7 @@ export async function POST(request: Request) {
     // ✅ 0) Hold HIGH (no timer) if requested
     // -t 0s ile hemen set edip çıkması sağlanır
     if (hold && value === 1) {
-      await execFileAsync(
-        "gpioset",
-        ["-c", CHIP, "-t", "0s", `${pin}=1`],
-        { timeout: 3000 }
-      );
+      await execFileAsync("gpioset", ["-c", CHIP, "-t", "0s", `${pin}=1`], { timeout: 3000 });
 
       return NextResponse.json({
         success: true,
@@ -94,11 +88,7 @@ export async function POST(request: Request) {
     // ✅ 1) Eğer value=0 istenmişse: direkt LOW (no timer)
     // -t 0s,0 ile hemen set edip çıkması sağlanır
     if (value === 0) {
-      await execFileAsync(
-        "gpioset",
-        ["-c", CHIP, "-t", "0s", `${pin}=0`],
-        { timeout: 3000 }
-      );
+      await execFileAsync("gpioset", ["-c", CHIP, "-t", "0s", `${pin}=0`], { timeout: 3000 });
 
       return NextResponse.json({
         success: true,
@@ -113,11 +103,9 @@ export async function POST(request: Request) {
     // ✅ 2) HIGH pulse (fail-safe): -t <duration>,0
     const tArg = toGpiosetTimeArg(duration);
 
-    await execFileAsync(
-      "gpioset",
-      ["-c", CHIP, "-t", tArg, `${pin}=1`],
-      { timeout: duration + 5000 }
-    );
+    console.log(`Executing gpioset: -c ${CHIP} -t ${tArg} ${pin}=1`);
+
+    await execFileAsync("gpioset", ["-c", CHIP, "-t", tArg, `${pin}=1`], { timeout: duration + 5000 });
 
     return NextResponse.json({
       success: true,
