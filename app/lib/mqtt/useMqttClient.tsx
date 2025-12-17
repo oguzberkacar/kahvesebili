@@ -123,6 +123,14 @@ export function useMqttClient(config: UseMqttConfig, initialSubscriptions: Subsc
     await unsubscribeTopics(client, topics);
   }, []);
 
+  const reconnect = useCallback(() => {
+    const client = clientRef.current;
+    if (client) {
+      console.log("Forcing MQTT reconnect...");
+      client.reconnect();
+    }
+  }, []);
+
   const disconnect = useCallback(() => {
     const client = clientRef.current;
     if (client) {
@@ -143,6 +151,7 @@ export function useMqttClient(config: UseMqttConfig, initialSubscriptions: Subsc
     subscribe,
     unsubscribe,
     disconnect,
+    reconnect,
     clearMessages,
   };
 }
