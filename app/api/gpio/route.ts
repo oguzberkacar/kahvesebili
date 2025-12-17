@@ -44,6 +44,7 @@ function toGpiosetTimeArg(durationMs: number) {
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
+  console.log("[GPIO API] Received Body:", body);
 
   const pin = clamp(toInt(body.pin, 17), MIN_PIN, MAX_PIN);
   const duration = clamp(toInt(body.duration, 2000), MIN_MS, MAX_MS);
