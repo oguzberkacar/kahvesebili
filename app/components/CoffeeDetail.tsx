@@ -60,7 +60,7 @@ export default function CoffeeDetail({
   const [orderNumber, setOrderNumber] = useState("");
   const router = useRouter();
   const currencySymbol = coffee.currency?.symbol ?? "$";
-  const { sendOrder } = useMaster();
+  const { sendOrder, connectionState } = useMaster();
 
   const deviceType = useDeviceType();
 
@@ -209,6 +209,31 @@ export default function CoffeeDetail({
         className="flex flex-col items-center w-full relative justify-center h-full transition-all duration-500 ease-in-out"
         style={{ paddingBottom: showDetails ? "0px" : "380px" }}
       >
+        {/* Connection Status Indicator */}
+        <div className="absolute top-0 right-0 p-4 z-50">
+          <div
+            className={cn(
+              "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-colors",
+              connectionState === "connected"
+                ? "bg-green-100 text-green-800"
+                : connectionState === "reconnecting"
+                ? "bg-yellow-100 text-yellow-800"
+                : "bg-red-100 text-red-800"
+            )}
+          >
+            <span
+              className={cn(
+                "w-2 h-2 rounded-full",
+                connectionState === "connected"
+                  ? "bg-green-500"
+                  : connectionState === "reconnecting"
+                  ? "bg-yellow-500"
+                  : "bg-red-500"
+              )}
+            />
+            {connectionState}
+          </div>
+        </div>
         {/* SECTION 1: Top Content (Image + Title) */}
         <div
           // className={`w-full flex transition-all duration-700 ease-in-out ${
