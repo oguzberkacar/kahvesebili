@@ -284,7 +284,7 @@ export default function CoffeeDetail({
             </div>
 
             {/* Payment View Specific Info */}
-            <div
+            {/* <div
               className={`flex flex-col gap-2 transition-all duration-500 overflow-hidden ${
                 isPaymentView ? "opacity-100 max-h-[500px]" : "opacity-0 max-h-0"
               }`}
@@ -297,13 +297,17 @@ export default function CoffeeDetail({
                 {currencySymbol}
                 {coffee.sizes[selectedSize].price.toFixed(2)}
               </div>
-            </div>
+            </div> */}
 
             {/* Default View Description */}
+
+            {/* // ${
+                // !isPaymentView ? "opacity-100 max-h-40" : "opacity-0 max-h-0"
+              // } */}
             <div
-              className={`transition-all duration-500 overflow-hidden ${
-                !isPaymentView ? "opacity-100 max-h-40" : "opacity-0 max-h-0"
-              }`}
+              className={`transition-all duration-500 overflow-hidden 
+             
+              `}
             >
               <p
                 className={cn(
@@ -314,7 +318,29 @@ export default function CoffeeDetail({
                 {coffee.description}
               </p>
             </div>
-            {deviceType !== "fixed" && !isPaymentView && (
+            {deviceType !== "fixed" && (
+              <div className="flex justify-center items-center mb-4 text-6xl md:text-[81px] font-extrabold leading-12 text-secondary font-sans">
+                <span className="mr-4">{currencySymbol}</span>
+                <div className="h-[72px] md:h-24 overflow-hidden relative [--price-height:72px] md:[--price-height:96px]">
+                  <div
+                    className="flex flex-col transition-transform duration-500 ease-in-out"
+                    style={{
+                      transform: `translateY(calc(var(--price-height) * -${(["small", "medium", "large"] as const).indexOf(
+                        selectedSize
+                      )}))`,
+                    }}
+                  >
+                    {(["small", "medium", "large"] as const).map((s) => (
+                      <div key={s} className="h-[72px] md:h-24 flex items-center justify-start">
+                        {coffee.sizes[s].price.toFixed(2)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {deviceType == "fixed" && isPaymentView && (
               <div className="flex justify-center items-center mb-4 text-6xl md:text-[81px] font-extrabold leading-12 text-secondary font-sans">
                 <span className="mr-4">{currencySymbol}</span>
                 <div className="h-[72px] md:h-24 overflow-hidden relative [--price-height:72px] md:[--price-height:96px]">
@@ -381,7 +407,7 @@ export default function CoffeeDetail({
             transform: showDetails ? "translateY(120%)" : "translateY(0%)",
           }}
         >
-          {!isPaymentView && deviceType !== "fixed" && (
+          {!isPaymentView && deviceType == "fixed" && (
             <div className="flex justify-center items-center mb-4 text-6xl md:text-[81px] font-extrabold leading-12 text-secondary font-sans">
               <span className="mr-4">{currencySymbol}</span>
               <div className="h-[72px] md:h-24 overflow-hidden relative [--price-height:72px] md:[--price-height:96px]">
@@ -403,49 +429,50 @@ export default function CoffeeDetail({
             </div>
           )}
 
-          {isPaymentView && (
-            <h3
-              className={cn(
-                "text-[48px] font-extrabold leading-[72px] text-secondary flex justify-center items-center text-center mb-6 transition-all duration-300"
-              )}
-            >
-              {isWaitingPayment ? (
-                <span className="flex flex-col items-center gap-4">
-                  Waiting
-                  <br />
-                  Payment Confirmation
-                  <span className="relative w-8 h-8 block">
-                    <svg
-                      className="animate-spin text-secondary opacity-20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    </svg>
-                    <svg
-                      className="animate-spin text-secondary absolute top-0 left-0"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                        strokeLinecap="round"
-                        style={{ strokeDasharray: "40 100" }}
-                      />
-                    </svg>
-                  </span>
+          {/* {isPaymentView && ( */}
+          <h3
+            className={cn(
+              "text-[48px] font-extrabold leading-[72px] text-secondary flex justify-center items-center text-center mb-6 transition-all animate-in fade-in slide-in-from-bottom-4 duration-500",
+              isPaymentView ? "opacity-100 max-h-[600px]" : "opacity-0 max-h-0 overflow-hidden"
+            )}
+          >
+            {isWaitingPayment ? (
+              <span className="flex flex-col items-center gap-4">
+                Waiting
+                <br />
+                Payment Confirmation
+                <span className="relative w-8 h-8 block">
+                  <svg
+                    className="animate-spin text-secondary opacity-20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  </svg>
+                  <svg
+                    className="animate-spin text-secondary absolute top-0 left-0"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      strokeLinecap="round"
+                      style={{ strokeDasharray: "40 100" }}
+                    />
+                  </svg>
                 </span>
-              ) : (
-                <span className="text-[48px]  font-extrabold leading-[72px] text-secondary text-center mb-6 transition-all duration-300 w-[422px]">
-                  Select Payment Method
-                </span>
-              )}
-            </h3>
-          )}
+              </span>
+            ) : (
+              <span className="text-[48px]  font-extrabold leading-[72px] text-secondary text-center mb-6 transition-all duration-300 w-[422px]">
+                Select Payment Method
+              </span>
+            )}
+          </h3>
+          {/* )} */}
 
           <div
             className="flex w-[200%] transition-transform duration-700 ease-spring"
@@ -500,9 +527,12 @@ export default function CoffeeDetail({
 
             {/* Slide 2: Payment Methods & Waiting State */}
             <div className="w-1/2 flex flex-col items-center justify-end px-2">
-              <div className={cn("flex flex-col items-center justify-center w-full max-w-xs",
-                deviceType !== "fixed" ? "max-w-full! px-4" : ""
-              )}>
+              <div
+                className={cn(
+                  "flex flex-col items-center justify-center w-full max-w-xs",
+                  deviceType !== "fixed" ? "max-w-full! px-4" : ""
+                )}
+              >
                 {/* Title & Spinner */}
                 <div className="flex w-full max-w-[600px] h-[284px] relative items-center justify-center">
                   {/* Cash Button */}

@@ -7,6 +7,7 @@ import Navbar from "../components/Navbar";
 import { cn } from "@/lib/utils";
 import { useMaster } from "../context/MasterContext";
 import useDeviceType from "../hooks/useDeviceType";
+import { useRouter } from "next/navigation";
 
 export interface Sizes {
   small: { price: number; volume: string };
@@ -40,6 +41,7 @@ export default function OrderPage() {
   const [activeView, setActiveView] = useState<"list" | "detail">("list");
   const [isPaymentView, setIsPaymentView] = useState(false);
   const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
+  const router = useRouter();
 
   // Get active stations from Master Context
   const { activeStations } = useMaster();
@@ -53,12 +55,7 @@ export default function OrderPage() {
 
   const handleBack = () => {
     if (isPaymentSuccess) {
-      setIsPaymentSuccess(false);
-      setIsPaymentView(false);
-      setActiveView("list");
-      setTimeout(() => {
-        setSelectedCoffee(null);
-      }, 500);
+      router.push("/siparis");
       return;
     }
     if (isPaymentView) {
