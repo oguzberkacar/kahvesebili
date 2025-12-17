@@ -33,7 +33,7 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
   } = useMqttClient({
     ...envConfig,
     role: "master", // Enforce role
-    clientId: (envConfig.deviceId || "master-screen") + "-" + Math.random().toString(16).substr(2, 6),
+    clientId: envConfig.deviceId || "master-screen",
     enabled,
   });
 
