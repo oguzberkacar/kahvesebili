@@ -112,8 +112,8 @@ export default function StationPage() {
   if (stationState === "DISCONNECTED" || (!coffeeConfig && stationState === "IDLE")) {
     // ... existing disconnected view ...
     return (
-      <div className="w-full h-screen bg-black flex items-center justify-center">
-        <div className="w-[600px] h-[1024px] bg-[#1F3933] relative flex flex-col items-center pt-[48px] overflow-hidden shadow-2xl">
+      <div className={cn("w-full h-screen bg-secondary flex items-center justify-center")}>
+        <div className="w-[600px] h-[1024px] bg-secondary relative flex flex-col items-center pt-[48px] overflow-hidden ">
           <div className="w-[520px] bg-white rounded-[40px] p-10 flex flex-col items-center text-center opacity-50">
             <div className="w-48 h-48 bg-gray-200 rounded-full mb-4 animate-pulse" />
             <div className="h-8 w-64 bg-gray-200 rounded mb-2 animate-pulse" />
@@ -140,11 +140,16 @@ export default function StationPage() {
 
   // Active / Connected View
   return (
-    <div className="w-full h-screen bg-gray-100 flex items-center justify-center p-4">
+    <div
+      className={cn(
+        "w-full h-screen bg-primary  flex items-center justify-center p-4 transition-all duration-700 ease-in-out",
+        stationState === "PROCESSING" ? "bg-secondary" : "bg-primary"
+      )}
+    >
       <div
         className={cn(
-          "w-[600px] h-[1024px] relative flex flex-col items-center overflow-hidden shadow-2xl transition-all duration-700 ease-in-out",
-          stationState === "PROCESSING" ? "bg-[#122824] pt-8" : "bg-[#65E5B4] pt-[48px]"
+          "w-[600px] h-[1024px] relative flex flex-col items-center overflow-hidden  transition-all duration-700 ease-in-out",
+          stationState === "PROCESSING" ? "bg-secondary pt-8" : "bg-primary pt-[48px]"
         )}
       >
         {/* Top Info Card */}
