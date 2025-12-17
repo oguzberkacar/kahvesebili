@@ -102,9 +102,8 @@ export async function POST(request: Request) {
     // ✅ 2) HIGH pulse (fail-safe): -t <duration>,0
     const tArg = toGpiosetTimeArg(duration);
 
-    console.log(`Executing gpioset: -c ${CHIP} -t ${tArg} ${pin}=1`);
-
-    await execFileAsync("gpioset", ["-c", CHIP, "-t", tArg, `${pin}=1`], { timeout: duration + 5000 });
+    console.log(`Executing gpioset: -c ${CHIP} -t ${tArg} ${pin}=${value}`);
+    await execFileAsync("gpioset", ["-c", CHIP, "-t", tArg, `${pin}=${value}`], { timeout: duration + 5000 });
 
     return NextResponse.json({
       success: true,
