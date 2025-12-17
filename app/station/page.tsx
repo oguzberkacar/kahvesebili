@@ -109,29 +109,42 @@ export default function StationPage() {
     return () => clearTimeout(timeout);
   }, [stationState, animationStep]);
 
-  // Not Active / Disconnected View
-  if (stationState === "DISCONNECTED" || (!coffeeConfig && stationState === "IDLE")) {
-    // ... existing disconnected view ...
+  // Not Active / Disconnected / Connection Error View
+  if (stationState === "DISCONNECTED" || connectionState !== "connected" || (!coffeeConfig && stationState === "IDLE")) {
     return (
-      <div className={cn("w-full h-screen bg-secondary flex items-center justify-center")}>
-        <div className="w-[600px] h-[1024px] bg-secondary relative flex flex-col items-center pt-[48px] overflow-hidden ">
-          <div className="w-[520px] bg-white rounded-[40px] p-10 flex flex-col items-center text-center opacity-50">
-            <div className="w-48 h-48 bg-gray-200 rounded-full mb-4 animate-pulse" />
-            <div className="h-8 w-64 bg-gray-200 rounded mb-2 animate-pulse" />
-            <div className="h-4 w-48 bg-gray-200 rounded animate-pulse" />
+      <div className={cn("w-full h-screen bg-red-50 flex items-center justify-center")}>
+        <div className="w-[600px] h-[1024px] bg-red-50 relative flex flex-col items-center pt-[48px] overflow-hidden ">
+          <div className="w-[520px] bg-white rounded-[40px] p-10 flex flex-col items-center text-center shadow-lg">
+            <div className="w-24 h-24 bg-red-100 rounded-full mb-6 flex items-center justify-center">
+              {/* Simple Wifi Off Icon */}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+                className="w-12 h-12 text-red-600"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 3l18 18M12 18.75a2.25 2.25 0 00-2.25-2.25m2.25 2.25c.621 0 1.157-.253 1.503-.667M9.75 16.5c-1.34-1.341-2.924-2.25-4.662-2.25-.562 0-1.112.093-1.64.27M14.25 16.5c1.34-1.341 2.924-2.25 4.662-2.25.562 0 1.112.093 1.64.27M7.5 12.188c1.685-1.037 3.655-1.688 5.75-1.688.947 0 1.868.132 2.742.38m-7.514-4.823c2.724-1.127 5.727-1.127 8.45 0"
+                />
+              </svg>
+            </div>
+            <h2 className="text-red-900 text-3xl font-bold mb-2">Connection Lost</h2>
+            <p className="text-red-700 text-lg">
+              {connectionState === "reconnecting" ? "Trying to reconnect..." : "Please check your network."}
+            </p>
           </div>
 
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full text-center px-8">
-            <h2 className="text-white text-[32px] font-bold leading-normal">
-              We can not serve to
-              <br />
-              you at moment
-            </h2>
+            <h2 className="text-red-900/20 text-[32px] font-bold leading-normal uppercase">System Offline</h2>
           </div>
 
           <div className="absolute -bottom-[65%] left-1/2 -translate-x-1/2 w-[150%] aspect-square bg-white rounded-full flex items-start justify-center pt-[8%]">
-            <div className="mt-8">
-              <KardoraBaseLogo fillColor="#1F3933" />
+            <div className="mt-8 opacity-50 grayscale">
+              <KardoraBaseLogo fillColor="#991B1B" />
             </div>
           </div>
         </div>
