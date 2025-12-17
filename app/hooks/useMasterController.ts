@@ -116,7 +116,7 @@ export function useMasterController() {
         // 2. Start Request -> Trigger GPIO
         if (payload.type === "start_request") {
           const { deviceId, orderId } = payload;
-          console.log(`Start request from ${deviceId} for order ${orderId}`);
+          console.log(`[Master] Received START_REQUEST from ${deviceId} for order ${orderId}`);
 
           // Update Order Status to PROCESSING
           setActiveOrders((prev) =>
@@ -128,12 +128,14 @@ export function useMasterController() {
 
           if (coffee && coffee.pin) {
             // 2a. Acknowledge Start (Processing)
+            console.log(`[Master] Sending STATUS: PROCESSING to ${deviceId}`);
             publish({
               topic: mqttTopics.station(deviceId).status,
               payload: { status: "processing", deviceId, ts: Date.now() },
             });
 
             // 2b. Trigger GPIO API
+            console.log(`[Master] Triggering GPIO for PIN ${coffee.pin}`);
             fetch("/api/gpio", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -143,20 +145,20 @@ export function useMasterController() {
                 let success = res.ok;
                 try {
                   const json = await res.json();
-                  if (json.mocked) console.log("GPIO Mocked:", json);
+                  if (json.mocked) console.log("[Master] GPIO Mocked:", json);
                 } catch (e) {
                   // ignore json parse error
                 }
 
                 if (success) {
-                  console.log("GPIO Triggered Successfully");
+                  console.log("[Master] GPIO Triggered Successfully");
                 } else {
-                  console.error("GPIO Failed (API returned error), but proceeding with flow simulation.");
+                  console.error("[Master] GPIO Failed (API returned error), but proceeding with flow simulation.");
                 }
 
                 // 2c. Wait for duration (e.g. 10s as requested) - ALWAYS RUN THIS for UX flow
                 setTimeout(() => {
-                  console.log(`Sending COMPLETED to ${deviceId}`);
+                  console.log(`[Master] Sending STATUS: COMPLETED to ${deviceId}`);
                   publish({
                     topic: mqttTopics.station(deviceId).status,
                     payload: { status: "completed", deviceId, ts: Date.now() },
@@ -169,11 +171,11 @@ export function useMasterController() {
                 }, 10000); // 10 seconds
               })
               .catch((err) => {
-                console.error("GPIO Call Error", err);
+                console.error("[Master] GPIO Call Error", err);
                 // Even on network error, finish the flow?
                 // Probably yes for testing.
                 setTimeout(() => {
-                  console.log(`Sending COMPLETED to ${deviceId} (Recovery from GPIO Error)`);
+                  console.log(`[Master] Sending STATUS: COMPLETED to ${deviceId} (Recovery from GPIO Error)`);
                   publish({
                     topic: mqttTopics.station(deviceId).status,
                     payload: { status: "completed", deviceId, ts: Date.now() },
@@ -184,6 +186,8 @@ export function useMasterController() {
                   );
                 }, 10000);
               });
+          } else {
+            console.warn(`[Master] Coffee config or PIN not found for ${deviceId}`);
           }
         }
       } catch (e) {

@@ -220,6 +220,12 @@ export function useStationController({ stationId, brokerUrl }: StationController
 
     // Publish Start Event to Master
     const topic = mqttTopics.station(effectiveStationId).events;
+    console.log(`[Station] Sending START_REQUEST to ${topic}`, {
+      type: "start_request",
+      deviceId: effectiveStationId,
+      orderId: order.orderId,
+    });
+
     publish({
       topic,
       payload: {
