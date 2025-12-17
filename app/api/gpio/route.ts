@@ -35,10 +35,10 @@ function clamp(n: number, min: number, max: number) {
 function toGpiosetTimeArg(durationMs: number) {
   const d = clamp(durationMs, MIN_MS, MAX_MS);
 
-  if (d >= 1000) {
-    const sec = Math.ceil(d / 1000);
-    return `${sec}s,0`;
-  }
+  // if (d >= 1000) {
+  //   const sec = Math.ceil(d / 1000);
+  //   return `${sec}s,0`;
+  // }
   return `${d}ms,0`;
 }
 
