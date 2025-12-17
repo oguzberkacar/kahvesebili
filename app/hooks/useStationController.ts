@@ -25,6 +25,9 @@ export function useStationController({ stationId, brokerUrl }: StationController
   const [orders, setOrders] = useState<CommandMessage[]>([]);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
+  // Track processing order explicitly to avoid closure staleness
+  const processingOrderIdRef = useRef<string | null>(null);
+
   // Get defaults from env
   const envConfig = getMqttConfigFromEnv();
 
@@ -125,19 +128,25 @@ export function useStationController({ stationId, brokerUrl }: StationController
         if (payload.status === "processing") {
           // Master acknowledged start
           setStationState("PROCESSING");
+          if (selectedOrderId) {
+            processingOrderIdRef.current = selectedOrderId;
+          }
         } else if (payload.status === "completed") {
           console.log(`[Station] Received STATUS: COMPLETED from Master`);
           setStationState("COMPLETED");
 
+          // Capture the finished ID synchronously before state update
+          const finishedOrderId = processingOrderIdRef.current;
+
           // Remove completed order from queue
           setOrders((prev) => {
-            // We need to know WHICH order completed.
-            // Since tracking is loose, we assume the 'selectedOrderId' completed.
-            // But we can't access selectedOrderId easily in this callback without dependency.
-            // We'll update logical state here, and use logic in render/effects to cleanup.
-            // Actually, simplest is:
-            return prev.filter((o) => o.orderId !== selectedOrderId);
+            if (finishedOrderId) {
+              return prev.filter((o) => o.orderId !== finishedOrderId);
+            }
+            return prev;
           });
+
+          processingOrderIdRef.current = null;
 
           // Reset selection
           setSelectedOrderId(null);
@@ -243,10 +252,18 @@ export function useStationController({ stationId, brokerUrl }: StationController
     // Wait for Master confirmation instead.
   }, [publish, effectiveStationId, orders, selectedOrderId]);
 
+  // Full Hard Reset
   const handleReset = useCallback(() => {
     setStationState("IDLE");
     setOrders([]);
     setSelectedOrderId(null);
+  }, []);
+
+  // Safe Reset: Go to IDLE (or ORDER_RECEIVED) but KEEP ORDERS
+  const handleSafeReset = useCallback(() => {
+    setStationState("IDLE");
+    setSelectedOrderId(null);
+    // orders are preserved, effect will promote to ORDER_RECEIVED if any exist
   }, []);
 
   const handleSelectOrder = useCallback((id: string) => {
@@ -261,6 +278,7 @@ export function useStationController({ stationId, brokerUrl }: StationController
     handleStartOrder,
     handleSelectOrder,
     handleReset,
+    handleSafeReset,
     connectionState,
   };
 }

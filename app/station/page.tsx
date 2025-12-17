@@ -324,7 +324,14 @@ export default function StationPage() {
           {stationState === "COMPLETED" && (
             <div className="animate-in zoom-in fade-in duration-500">
               <h2 className="text-[#1F3933] text-[48px] font-bold leading-tight mb-4">Enjoy!</h2>
-              <p className="text-[#1F3933] text-2xl">Your drink is ready.</p>
+              <p className="text-[#1F3933] text-2xl mb-8">Your drink is ready.</p>
+
+              <button
+                onClick={handleReset} // Use existing handleReset for now, effectively "Done"
+                className="bg-[#1F3933] text-white text-xl font-bold px-12 py-4 rounded-full shadow-lg hover:bg-[#152925] transition-transform active:scale-95"
+              >
+                DONE
+              </button>
             </div>
           )}
         </div>
