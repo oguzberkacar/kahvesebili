@@ -159,7 +159,7 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
             fetch("/api/gpio", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ pin: coffee.pin, duration, value: 0 }),
+              body: JSON.stringify({ pin: coffee.pin, duration, value: 1 }),
             })
               .then(async (res) => {
                 const success = res.ok;
