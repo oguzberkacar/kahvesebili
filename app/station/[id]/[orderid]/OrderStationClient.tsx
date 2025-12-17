@@ -152,6 +152,9 @@ export default function OrderStationClient({ coffee, displayOrderId }: Props) {
     if (!coffee.pin) return;
 
     setIsTriggeringPin(true);
+    const isCold = coffee.tags && coffee.tags.includes("Cold");
+    const duration = isCold ? 7000 : 6000;
+
     try {
       await fetch("/api/gpio", {
         method: "POST",
@@ -160,7 +163,7 @@ export default function OrderStationClient({ coffee, displayOrderId }: Props) {
         },
         body: JSON.stringify({
           pin: coffee.pin,
-          duration: 5000,
+          duration,
           value: 1,
         }),
       });
@@ -351,9 +354,7 @@ export default function OrderStationClient({ coffee, displayOrderId }: Props) {
                   onClick={triggerPin}
                   disabled={isTriggeringPin}
                   className={`mt-8 border-2 text-secondary text-3xl font-black py-4 px-12 rounded-full shadow-lg active:scale-95 transition-transform uppercase tracking-wider ${
-                    isTriggeringPin
-                      ? "bg-gray-200 border-gray-200 cursor-not-allowed"
-                      : "bg-white border-gray-200"
+                    isTriggeringPin ? "bg-gray-200 border-gray-200 cursor-not-allowed" : "bg-white border-gray-200"
                   }`}
                 >
                   {isTriggeringPin ? "Starting..." : "Start"}
