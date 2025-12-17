@@ -126,6 +126,7 @@ export function useStationController({ stationId, brokerUrl }: StationController
           // Master acknowledged start
           setStationState("PROCESSING");
         } else if (payload.status === "completed") {
+          console.log(`[Station] Received STATUS: COMPLETED from Master`);
           setStationState("COMPLETED");
 
           // Remove completed order from queue

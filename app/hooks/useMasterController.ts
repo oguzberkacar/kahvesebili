@@ -33,7 +33,7 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
   } = useMqttClient({
     ...envConfig,
     role: "master", // Enforce role
-    clientId: "master-screen",
+    clientId: envConfig.deviceId || "master-screen",
     enabled,
   });
 

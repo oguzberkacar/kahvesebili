@@ -102,6 +102,10 @@ export function useMqttClient(config: UseMqttConfig, initialSubscriptions: Subsc
   const publish = useCallback(async (message: PublishMessage) => {
     const client = clientRef.current;
     if (!client) throw new Error("MQTT client is not ready");
+    if (!client.connected) {
+      console.warn("MQTT Publish skipped: Client not connected");
+      return;
+    }
     await publishMessage(client, message);
   }, []);
 
