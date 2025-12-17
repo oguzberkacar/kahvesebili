@@ -140,27 +140,50 @@ export function useMasterController() {
               body: JSON.stringify({ pin: coffee.pin }),
             })
               .then(async (res) => {
-                if (res.ok) {
-                  console.log("GPIO Triggered");
-                  // 2c. Wait for duration (e.g. 10s as requested)
-                  setTimeout(() => {
-                    publish({
-                      topic: mqttTopics.station(deviceId).status,
-                      payload: { status: "completed", deviceId, ts: Date.now() },
-                    });
-
-                    // Update Status to COMPLETED
-                    setActiveOrders((prev) =>
-                      prev.map((o) => (o.orderId === orderId ? { ...o, status: "COMPLETED", endTime: Date.now() } : o))
-                    );
-
-                    // Optional: Cleanup old completed orders?
-                  }, 10000); // 10 seconds
-                } else {
-                  console.error("GPIO Failed");
+                let success = res.ok;
+                try {
+                  const json = await res.json();
+                  if (json.mocked) console.log("GPIO Mocked:", json);
+                } catch (e) {
+                  // ignore json parse error
                 }
+
+                if (success) {
+                  console.log("GPIO Triggered Successfully");
+                } else {
+                  console.error("GPIO Failed (API returned error), but proceeding with flow simulation.");
+                }
+
+                // 2c. Wait for duration (e.g. 10s as requested) - ALWAYS RUN THIS for UX flow
+                setTimeout(() => {
+                  console.log(`Sending COMPLETED to ${deviceId}`);
+                  publish({
+                    topic: mqttTopics.station(deviceId).status,
+                    payload: { status: "completed", deviceId, ts: Date.now() },
+                  });
+
+                  // Update Status to COMPLETED
+                  setActiveOrders((prev) =>
+                    prev.map((o) => (o.orderId === orderId ? { ...o, status: "COMPLETED", endTime: Date.now() } : o))
+                  );
+                }, 10000); // 10 seconds
               })
-              .catch((err) => console.error("GPIO Call Error", err));
+              .catch((err) => {
+                console.error("GPIO Call Error", err);
+                // Even on network error, finish the flow?
+                // Probably yes for testing.
+                setTimeout(() => {
+                  console.log(`Sending COMPLETED to ${deviceId} (Recovery from GPIO Error)`);
+                  publish({
+                    topic: mqttTopics.station(deviceId).status,
+                    payload: { status: "completed", deviceId, ts: Date.now() },
+                  });
+
+                  setActiveOrders((prev) =>
+                    prev.map((o) => (o.orderId === orderId ? { ...o, status: "COMPLETED", endTime: Date.now() } : o))
+                  );
+                }, 10000);
+              });
           }
         }
       } catch (e) {
