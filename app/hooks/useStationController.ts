@@ -222,6 +222,36 @@ export function useStationController({ stationId, brokerUrl }: StationController
     }
   }, [orders]);
 
+  // Safety Timeout: Force completion if stuck in PROCESSING for 15s
+  useEffect(() => {
+    let safetyTimeout: NodeJS.Timeout;
+
+    if (stationState === "PROCESSING") {
+      safetyTimeout = setTimeout(() => {
+        console.warn("Safety Timeout: Force transitioning to COMPLETED (Master response missing)");
+        // Replicate completion logic
+        setStationState("COMPLETED");
+
+        const finishedOrderId = processingOrderIdRef.current;
+        setOrders((prev) => {
+          if (finishedOrderId) {
+            return prev.filter((o) => o.orderId !== finishedOrderId);
+          }
+          return prev;
+        });
+        processingOrderIdRef.current = null;
+        setSelectedOrderId(null);
+
+        // Auto reset after 30s logic matches main logic
+        setTimeout(() => {
+          setStationState((curr) => (curr === "COMPLETED" ? "IDLE" : curr));
+        }, 30000);
+      }, 15000); // 15 seconds
+    }
+
+    return () => clearTimeout(safetyTimeout);
+  }, [stationState]);
+
   // Actions
   const handleStartOrder = useCallback(() => {
     if (!selectedOrderId) return;
