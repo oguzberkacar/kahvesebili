@@ -14,6 +14,7 @@ const child = spawn('npx', ['next', 'build'], {
   stdio: 'inherit',
   env: {
     ...process.env,
+    NODE_ENV: 'production',
     APP_ENV: appEnv,
     STATION_ID: stationId,
   },

@@ -142,7 +142,7 @@ export function useMasterController() {
               body: JSON.stringify({ pin: coffee.pin }),
             })
               .then(async (res) => {
-                let success = res.ok;
+                const success = res.ok;
                 try {
                   const json = await res.json();
                   if (json.mocked) console.log("[Master] GPIO Mocked:", json);
