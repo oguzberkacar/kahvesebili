@@ -82,8 +82,12 @@ export async function POST(request: Request) {
     // If value=0, we pull LOW for duration, then release (toggle).
     const tArg = toGpiosetTimeArg(duration);
 
-    console.log(`Executing gpioset: -c ${CHIP} -t ${tArg} ${pin}=${value}`);
-    await execFileAsync("gpioset", ["-c", CHIP, "-t", tArg, `${pin}=${value}`], { timeout: duration + 5000 });
+    // Force value=1 (Active High) as per user request to ensure pin goes HIGH.
+    // Overriding body.value if it was 0 for regular pulse.
+    const effectiveValue = 1;
+
+    console.log(`Executing gpioset: -c ${CHIP} -t ${tArg} ${pin}=${effectiveValue}`);
+    await execFileAsync("gpioset", ["-c", CHIP, "-t", tArg, `${pin}=${effectiveValue}`], { timeout: duration + 5000 });
 
     return NextResponse.json({
       success: true,
