@@ -7,6 +7,21 @@ import type { IncomingMessage } from "../lib/mqtt/types";
 import { getMqttConfigFromEnv } from "../lib/mqtt/config";
 import coffees from "../data/coffees.json";
 
+// Shared State Types (Mirrored from Station)
+export type StationSharedState = {
+  id: string;
+  type: "station";
+  state: "IDLE" | "ORDER_RECEIVED" | "PROCESSING" | "COMPLETED";
+  order: {
+    orderId: string;
+    size: string;
+    price: number;
+    recipeId: string;
+    customerName?: string;
+  } | null;
+  ts: number;
+};
+
 export type MasterOrder = {
   orderId: string;
   stationId: string;
@@ -19,67 +34,36 @@ export type MasterOrder = {
 export function useMasterController({ enabled = true }: { enabled?: boolean } = {}) {
   const envConfig = getMqttConfigFromEnv();
 
-  // Track connected stations
-  const [activeStations, setActiveStations] = useState<Set<string>>(new Set());
-  // Track orders
-  const [activeOrders, setActiveOrders] = useState<MasterOrder[]>([]);
+  // Track ALL stations state (Key: stationId)
+  const [stationStates, setStationStates] = useState<Record<string, StationSharedState>>({});
+
+  // Derived active orders for UI compatibility
+  // const activeOrders = ... derived from stationStates ...
 
   const {
-    client,
     state: connectionState,
     subscribe,
     publish,
     messages,
   } = useMqttClient({
     ...envConfig,
-    role: "master", // Enforce role
+    role: "master",
     clientId: envConfig.deviceId || "master-screen",
     enabled,
   });
 
-  // Subscribe to all stations AND Broadcast Discovery
+  // 1. Subscribe to Global State & Events
   useEffect(() => {
     if (connectionState === "connected") {
-      // Wildcards might be blocked by ACL. Subscribe explicitly to known stations.
-      // Wildcards might be blocked by ACL. Subscribe explicitly to known stations.
-      // Wildcard subscriptions - Broker now configured with allow_anonymous true
-      console.log("[Master] Subscribing with wildcards...");
+      console.log("[Master] Connected. Subscribing to ALL stations...");
       subscribe([
-        { topic: "station/+/hello", qos: 0 },
-        { topic: "station/+/events", qos: 0 },
-        { topic: "station/+/status", qos: 0 },
+        { topic: mqttTopics.statusAll, qos: 0 }, // Retained states
+        { topic: mqttTopics.events, qos: 0 }, // Momentry events
       ]);
-
-      /* EXPLICIT SUBSCRIPTIONS (Commented out for test)
-      const explicitSubscriptions: { topic: string; qos: 0 | 1 | 2 }[] = [];
-      const KNOWN_STATIONS = ["station1", "station2", "station3", "station4", "station5"];
-
-      KNOWN_STATIONS.forEach((id) => {
-        explicitSubscriptions.push({ topic: mqttTopics.station(id).hello, qos: 0 });
-        explicitSubscriptions.push({ topic: mqttTopics.station(id).events, qos: 0 });
-      });
-
-      subscribe(explicitSubscriptions);
-      */
-
-      // subscribe([
-      //   ...explicitSubscriptions,
-      //   // { topic: mqttTopics.master.helloAll, qos: 0 }, // Wildcard blocked
-      //   // { topic: mqttTopics.master.eventsAll, qos: 0 }, // Wildcard blocked
-      // ]);
-
-      // Proactive Discovery: Ask "Who is there?"
-      // console.log("Master connected. Broadcasting discovery...");
-      publish({
-        topic: mqttTopics.master.broadcast,
-        payload: { type: "discovery", ts: Date.now() },
-        qos: 0,
-        retain: false,
-      });
     }
-  }, [connectionState, subscribe, publish]);
+  }, [connectionState, subscribe]);
 
-  // Handle Incoming Messages (Hello, Events)
+  // 2. Handle Incoming Messages
   useEffect(() => {
     if (messages.length === 0) return;
     const lastMsg = messages[messages.length - 1];
@@ -91,175 +75,163 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
       try {
         const payload: any = msg.json || JSON.parse(msg.payload);
 
-        // 1. Station Hello -> Send Config
-        // Topic structure: station/{id}/hello
-        if (msg.topic.endsWith("/hello")) {
-          const stationId = payload.deviceId;
-          if (!stationId) return;
-          if (stationId === "master") return; // Ignore self
-
-          // console.log("Master received hello from:", stationId);
-
-          // Mark as active
-          setActiveStations((prev) => {
-            const next = new Set(prev);
-            next.add(stationId);
-            return next;
-          });
-
-          // Find Coffee for this station
-          let coffee = null;
-          // Try parsing number for coffees.json lookup
-          const numericId = parseInt(stationId.replace("station", ""), 10);
-
-          if (!isNaN(numericId)) {
-            coffee = coffees.find((c) => c.stationId === numericId);
-          } else {
-            // Fallback
-            coffee = coffees.find((c) => String(c.stationId) === stationId);
+        // A. State Update (system/status/+)
+        if (msg.topic.startsWith("system/status/")) {
+          // Simple State Sync
+          const stationId = payload.id;
+          if (stationId && payload.type === "station") {
+            setStationStates((prev) => ({
+              ...prev,
+              [stationId]: payload,
+            }));
           }
-
-          if (coffee) {
-            // console.log(`Configuring ${stationId} with ${coffee.name}`);
-            // Send Config
-            const topic = mqttTopics.station(stationId).command;
-            publish({
-              topic,
-              payload: {
-                type: "set_config",
-                deviceId: stationId,
-                coffee: coffee,
-                ts: Date.now(),
-              },
-            });
-          } else {
-            console.warn("No coffee found for stationId:", stationId);
-          }
+          return;
         }
 
-        // 2. Start Request -> Trigger GPIO
-        if (payload.type === "start_request") {
-          const { deviceId, orderId } = payload;
-          console.log(`[Master] Received START_REQUEST from ${deviceId} for order ${orderId}`);
+        // B. Event (system/events) -> START Signal
+        if (msg.topic === mqttTopics.events && payload.type === "START") {
+          const { stationId, orderId } = payload;
+          console.log(`[Master] Received START Event from ${stationId} for order ${orderId}`);
 
-          // Update Order Status to PROCESSING
-          setActiveOrders((prev) =>
-            prev.map((o) => (o.orderId === orderId ? { ...o, status: "PROCESSING", startTime: Date.now() } : o))
-          );
-
-          const numericId = parseInt(deviceId.replace("station", ""), 10);
-          const coffee = coffees.find((c) => c.stationId === numericId);
-
-          if (coffee && coffee.pin) {
-            // 2a. Acknowledge Start (Processing)
-            console.log(`[Master] Sending STATUS: PROCESSING to ${deviceId}`);
-            publish({
-              topic: mqttTopics.station(deviceId).status,
-              payload: { status: "processing", deviceId, ts: Date.now() },
-            });
-
-            // Determine duration: 7000ms for Cold, 6000ms for Hot (default)
-            const isCold = coffee.tags && coffee.tags.includes("Cold");
-            // 2b. Trigger GPIO API
-            const duration = isCold ? 7000 : 6000;
-            const payload = { pin: coffee.pin, duration: duration, value: 1, _v: "1.0.5" };
-            console.log(`[Master v1.0.5] Triggering GPIO (isCold: ${isCold}) Payload:`, payload);
-
-            fetch("/api/gpio", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
-            })
-              .then(async (res) => {
-                const success = res.ok;
-                try {
-                  const json = await res.json();
-                  if (json.mocked) console.log("[Master] GPIO Mocked:", json);
-                } catch (e) {
-                  // ignore json parse error
-                }
-
-                if (success) {
-                  console.log("[Master] GPIO Triggered Successfully");
-                } else {
-                  console.error("[Master] GPIO Failed, but simulating flow.");
-                }
-
-                // 2c. Wait for the coffee duration EXACTLY, then send completed
-                // We add a small buffer (e.g. 500ms) to ensure physics are done.
-                setTimeout(() => {
-                  console.log(`[Master] Sending STATUS: COMPLETED to ${deviceId} after ${duration}ms`);
-                  publish({
-                    topic: mqttTopics.station(deviceId).status,
-                    payload: { status: "completed", deviceId, ts: Date.now() },
-                  });
-
-                  // Update Status to COMPLETED
-                  setActiveOrders((prev) =>
-                    prev.map((o) => (o.orderId === orderId ? { ...o, status: "COMPLETED", endTime: Date.now() } : o))
-                  );
-                }, duration + 500); // Duration + 500ms buffer
-              })
-              .catch((err) => {
-                console.error("[Master] GPIO Call Error", err);
-                // Even on network error, finish the flow?
-                // Probably yes for testing.
-                setTimeout(() => {
-                  console.log(`[Master] Sending STATUS: COMPLETED to ${deviceId} (Recovery) after ${duration}ms`);
-                  publish({
-                    topic: mqttTopics.station(deviceId).status,
-                    payload: { status: "completed", deviceId, ts: Date.now() },
-                  });
-
-                  setActiveOrders((prev) =>
-                    prev.map((o) => (o.orderId === orderId ? { ...o, status: "COMPLETED", endTime: Date.now() } : o))
-                  );
-                }, duration + 500);
-              });
-          } else {
-            console.warn(`[Master] Coffee config or PIN not found for ${deviceId}`);
-          }
+          // 1. Trigger GPIO Flow
+          triggerGpioFlow(stationId, orderId);
         }
       } catch (e) {
         console.error("Master Handle Error", e);
       }
     },
-    [publish]
+    [] // Dependencies
   );
+
+  // GPIO Logic Helper
+  const triggerGpioFlow = (stationId: string, orderId: string) => {
+    // Find Pin Config
+    const numericId = parseInt(stationId.replace("station", ""), 10);
+    const coffee = coffees.find((c) => c.stationId === numericId);
+
+    if (!coffee || !coffee.pin) {
+      console.warn(`[Master] No PIN config for ${stationId}`);
+      return;
+    }
+
+    const isCold = coffee.tags && coffee.tags.includes("Cold");
+    const duration = isCold ? 7000 : 6000;
+
+    console.log(`[Master] Triggering GPIO PIN ${coffee.pin} for ${duration}ms`);
+
+    // 1. Update State to PROCESSING (Retained) -> Station shows animation
+    updateStationState(stationId, {
+      state: "PROCESSING",
+    });
+
+    // 2. Call API
+    const gpioPayload = { pin: coffee.pin, duration: duration, value: 1, _v: "2.0.0" };
+
+    fetch("/api/gpio", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(gpioPayload),
+    })
+      .then(async (res) => {
+        // ... handle success/fail log ...
+        console.log("[Master] GPIO API Response:", res.status);
+
+        // 3. Wait Duration + Buffer
+        setTimeout(() => {
+          console.log(`[Master] Sequence Done. Setting ${stationId} to COMPLETED.`);
+          // 4. Update State to COMPLETED (Retained) -> Station shows Enjoy
+          updateStationState(stationId, {
+            state: "COMPLETED",
+          });
+        }, duration + 500);
+      })
+      .catch((err) => {
+        console.error("GPIO Error", err);
+        // Recovery
+        setTimeout(() => {
+          updateStationState(stationId, { state: "COMPLETED" });
+        }, duration + 500);
+      });
+  };
+
+  // Helper to update specific station state (PATCH style)
+  const updateStationState = (stationId: string, updates: Partial<StationSharedState>) => {
+    setStationStates((prev) => {
+      const current = prev[stationId];
+      if (!current) return prev; // Should be there if we are interacting
+
+      const next: StationSharedState = {
+        ...current,
+        ...updates,
+        ts: Date.now(),
+      };
+
+      // Publish Retained
+      publish({
+        topic: mqttTopics.status(stationId),
+        payload: next,
+        retain: true,
+        qos: 0,
+      });
+
+      return { ...prev, [stationId]: next };
+    });
+  };
 
   // Public Actions
   const sendOrder = useCallback(
     (stationId: string, orderDetails: any) => {
-      // orderDetails: { orderId, size, recipeId... }
-      const topic = mqttTopics.station(stationId).command;
+      console.log(`[Master] Sending Order to ${stationId}`, orderDetails);
 
-      // Track locally
-      setActiveOrders((prev) => [
-        ...prev,
-        {
+      // Instead of ephemeral command, we UPDATE the Station's state to ORDER_RECEIVED
+      // But we need the current station state first.
+      // If we haven't received it yet (rare if connected), we can't patch.
+      // We can synthesize a new state.
+
+      // Synthesize
+      const newState: StationSharedState = {
+        id: stationId,
+        type: "station",
+        state: "ORDER_RECEIVED",
+        order: {
           orderId: orderDetails.orderId,
-          stationId,
-          status: "SENT",
-          details: orderDetails,
+          size: orderDetails.size,
+          price: orderDetails.price,
+          recipeId: orderDetails.recipeId,
         },
-      ]);
+        ts: Date.now(),
+      };
 
+      // Optimistic local update
+      setStationStates((prev) => ({ ...prev, [stationId]: newState }));
+
+      // Publish Retained
       publish({
-        topic,
-        payload: {
-          ...orderDetails,
-          deviceId: stationId,
-          ts: Date.now(),
-        },
+        topic: mqttTopics.status(stationId),
+        payload: newState,
+        retain: true, // IMPORTANT: Station picks this up immediately
+        qos: 0,
       });
     },
     [publish]
   );
 
+  // Compatibility Derivations
+  const activeStations = Object.keys(stationStates);
+  const activeOrders = Object.values(stationStates)
+    .filter((s) => s.order && (s.state === "ORDER_RECEIVED" || s.state === "PROCESSING" || s.state === "COMPLETED"))
+    .map((s) => ({
+      orderId: s.order!.orderId,
+      stationId: s.id,
+      status: s.state === "ORDER_RECEIVED" ? "SENT" : s.state, // Map enum
+      details: s.order,
+    }));
+
   return {
     connectionState,
     sendOrder,
-    activeStations: Array.from(activeStations),
+    activeStations,
     activeOrders,
+    stationStates, // Expose full state map if needed
   };
 }

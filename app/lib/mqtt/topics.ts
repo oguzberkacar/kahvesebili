@@ -1,41 +1,42 @@
 import type { DeviceRole, SubscriptionRequest } from "./types";
 
-const MASTER_BASE = `master`;
-const STATION_BASE = `station`;
+// PROD v2 Architecture: Shared State
+// All devices utilize 'system/status/{id}' for state sync using Retained messages.
+// All devices utilize 'system/events' for momentary actions (Start button, GPIO triggers).
+
+const SYSTEM_STATUS_BASE = "system/status";
+const SYSTEM_EVENTS = "system/events";
 
 export const mqttTopics = {
-  root: '',
-  master: {
-    broadcast: `${MASTER_BASE}/broadcast`,
-    helloAll: `${STATION_BASE}/+/hello`,
-    statusAll: `${STATION_BASE}/+/status`,
-    eventsAll: `${STATION_BASE}/+/events`,
-  },
-  station: (deviceId: string) => ({
-    hello: `${STATION_BASE}/${deviceId}/hello`,
-    status: `${STATION_BASE}/${deviceId}/status`,
-    events: `${STATION_BASE}/${deviceId}/events`,
-    command: `${STATION_BASE}/${deviceId}/command`,
-  }),
+  // Shared State Channel (Retained)
+  // Each station publishes its own state here: system/status/station1
+  // Master subscribes to system/status/+ to see everyone.
+  status: (deviceId: string) => `${SYSTEM_STATUS_BASE}/${deviceId}`,
+
+  // Wildcard for Master to listen all stations
+  statusAll: `${SYSTEM_STATUS_BASE}/+`,
+
+  // Event Channel (Ephemeral)
+  // Used for "Start Button Click" or "GPIO Done" signals that are momentary
+  events: SYSTEM_EVENTS,
 };
 
-export function defaultSubscriptionsForRole(
-  role: DeviceRole,
-  deviceId?: string,
-): SubscriptionRequest[] {
+export function defaultSubscriptionsForRole(role: DeviceRole, deviceId?: string): SubscriptionRequest[] {
+  // Master listens to everyone's state + events
   if (role === "master") {
     return [
-      { topic: mqttTopics.master.helloAll },
-      { topic: mqttTopics.master.statusAll },
-      { topic: mqttTopics.master.eventsAll },
+      { topic: mqttTopics.statusAll, qos: 0 },
+      { topic: mqttTopics.events, qos: 0 },
     ];
   }
 
-  if (!deviceId) return [];
+  // Station listens to its own state (to sync with Master updates) + events (optional)
+  if (deviceId) {
+    return [
+      { topic: mqttTopics.status(deviceId), qos: 0 },
+      // Station might not need events channel unless it listens for global broadcasts
+    ];
+  }
 
-  const stationTopics = mqttTopics.station(deviceId);
-  return [
-    { topic: mqttTopics.master.broadcast },
-    { topic: stationTopics.command },
-  ];
+  return [];
 }
