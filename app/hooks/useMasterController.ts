@@ -16,7 +16,7 @@ export type MasterOrder = {
   details: any;
 };
 
-export function useMasterController() {
+export function useMasterController({ enabled = true }: { enabled?: boolean } = {}) {
   const envConfig = getMqttConfigFromEnv();
 
   // Track connected stations
@@ -34,14 +34,25 @@ export function useMasterController() {
     ...envConfig,
     role: "master", // Enforce role
     clientId: "master-screen",
+    enabled,
   });
 
   // Subscribe to all stations AND Broadcast Discovery
   useEffect(() => {
     if (connectionState === "connected") {
+      // Wildcards might be blocked by ACL. Subscribe explicitly to known stations.
+      const explicitSubscriptions: { topic: string; qos: 0 | 1 | 2 }[] = [];
+      const KNOWN_STATIONS = ["station1", "station2", "station3", "station4", "station5"];
+
+      KNOWN_STATIONS.forEach((id) => {
+        explicitSubscriptions.push({ topic: mqttTopics.station(id).hello, qos: 0 });
+        explicitSubscriptions.push({ topic: mqttTopics.station(id).events, qos: 0 });
+      });
+
       subscribe([
-        { topic: mqttTopics.master.helloAll, qos: 0 },
-        { topic: mqttTopics.master.eventsAll, qos: 0 },
+        ...explicitSubscriptions,
+        // { topic: mqttTopics.master.helloAll, qos: 0 }, // Wildcard blocked
+        // { topic: mqttTopics.master.eventsAll, qos: 0 }, // Wildcard blocked
       ]);
 
       // Proactive Discovery: Ask "Who is there?"

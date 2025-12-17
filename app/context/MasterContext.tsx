@@ -31,7 +31,7 @@ export function MasterProvider({ children }: { children: ReactNode }) {
   const deviceId = process.env.NEXT_PUBLIC_DEVICE_ID || "unknown";
   const isStation = deviceId.startsWith("station");
 
-  const controller = useMasterController();
+  const controller = useMasterController({ enabled: !isStation });
 
   if (isStation) {
     // Don't expose master controller features if we are a station

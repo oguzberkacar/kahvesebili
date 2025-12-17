@@ -54,7 +54,7 @@ export function useStationController({ stationId, brokerUrl }: StationController
       subscribe([
         { topic: topics.command, qos: 0 },
         { topic: topics.status, qos: 0 },
-        { topic: mqttTopics.master.broadcast, qos: 0 }, // Listen for Master discovery
+        // { topic: mqttTopics.master.broadcast, qos: 0 }, // Subscribe to master broadcast might cause ACL issues
       ]);
     } else {
       setStationState("DISCONNECTED");

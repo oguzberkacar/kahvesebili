@@ -14,8 +14,11 @@ import type { ConnectionState, IncomingMessage, MqttConnectConfig, PublishMessag
 
 const MESSAGE_HISTORY_LIMIT = 50;
 
-export function useMqttClient(config: MqttConnectConfig, initialSubscriptions: SubscriptionRequest[] = []) {
-  const { url, clientId, username, password, role, deviceId, keepalive, clean, protocol } = config;
+// Local extended config
+type UseMqttConfig = MqttConnectConfig & { enabled?: boolean };
+
+export function useMqttClient(config: UseMqttConfig, initialSubscriptions: SubscriptionRequest[] = []) {
+  const { url, clientId, username, password, role, deviceId, keepalive, clean, protocol, enabled = true } = config;
   const clientRef = useRef<MqttClient | null>(null);
   const [state, setState] = useState<ConnectionState>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -23,6 +26,15 @@ export function useMqttClient(config: MqttConnectConfig, initialSubscriptions: S
   const subscriptionsRef = useRef<SubscriptionRequest[]>(initialSubscriptions);
 
   useEffect(() => {
+    if (!enabled) {
+      if (clientRef.current) {
+        clientRef.current.end(true);
+        clientRef.current = null;
+      }
+      setState("idle");
+      return;
+    }
+
     setError(null);
     setState("connecting");
     const client = connectMqttClient({
@@ -85,7 +97,7 @@ export function useMqttClient(config: MqttConnectConfig, initialSubscriptions: S
       clientRef.current = null;
       setState("idle");
     };
-  }, [url, clientId, username, password, role, deviceId, keepalive, clean, protocol]);
+  }, [url, clientId, username, password, role, deviceId, keepalive, clean, protocol, enabled]);
 
   const publish = useCallback(async (message: PublishMessage) => {
     const client = clientRef.current;
