@@ -42,21 +42,11 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
     if (connectionState === "connected") {
       // Wildcards might be blocked by ACL. Subscribe explicitly to known stations.
       // Wildcards might be blocked by ACL. Subscribe explicitly to known stations.
-      // TEST: Subscribe ONLY to station4 to isolate ACL failure
-      console.log("[Master] Testing Single Explicit Subscription (station4)...");
-      subscribe([
-        { topic: mqttTopics.station("station4").hello, qos: 0 },
-        { topic: mqttTopics.station("station4").events, qos: 0 },
-        { topic: mqttTopics.station("station4").status, qos: 0 },
-      ]);
-
-      /* WILDCARD TEST FAILED (ACL issue confirmed)
-      subscribe([
-        { topic: "station/+/hello", qos: 0 },
-        { topic: "station/+/events", qos: 0 },
-        { topic: "station/+/status", qos: 0 },
-      ]);
-      */
+      // PURE CONNECTION TEST: No subscriptions at all
+      // If loop CONTINUES, problem is NOT ACL but client-side (ID conflict, React double-mount, or auth)
+      // If loop STOPS, problem IS with subscriptions/ACL
+      console.log("[Master] PURE CONNECTION TEST - No subscriptions");
+      // subscribe([...]); // ALL DISABLED
 
       /* EXPLICIT SUBSCRIPTIONS (Commented out for test)
       const explicitSubscriptions: { topic: string; qos: 0 | 1 | 2 }[] = [];
