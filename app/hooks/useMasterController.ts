@@ -172,12 +172,13 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
                 if (success) {
                   console.log("[Master] GPIO Triggered Successfully");
                 } else {
-                  console.error("[Master] GPIO Failed (API returned error), but proceeding with flow simulation.");
+                  console.error("[Master] GPIO Failed, but simulating flow.");
                 }
 
-                // 2c. Wait for duration (e.g. 10s as requested) - ALWAYS RUN THIS for UX flow
+                // 2c. Wait for the coffee duration EXACTLY, then send completed
+                // We add a small buffer (e.g. 500ms) to ensure physics are done.
                 setTimeout(() => {
-                  console.log(`[Master] Sending STATUS: COMPLETED to ${deviceId}`);
+                  console.log(`[Master] Sending STATUS: COMPLETED to ${deviceId} after ${duration}ms`);
                   publish({
                     topic: mqttTopics.station(deviceId).status,
                     payload: { status: "completed", deviceId, ts: Date.now() },
@@ -187,14 +188,14 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
                   setActiveOrders((prev) =>
                     prev.map((o) => (o.orderId === orderId ? { ...o, status: "COMPLETED", endTime: Date.now() } : o))
                   );
-                }, 2000); // 2 seconds (shortened for testing/UX)
+                }, duration + 500); // Duration + 500ms buffer
               })
               .catch((err) => {
                 console.error("[Master] GPIO Call Error", err);
                 // Even on network error, finish the flow?
                 // Probably yes for testing.
                 setTimeout(() => {
-                  console.log(`[Master] Sending STATUS: COMPLETED to ${deviceId} (Recovery from GPIO Error)`);
+                  console.log(`[Master] Sending STATUS: COMPLETED to ${deviceId} (Recovery) after ${duration}ms`);
                   publish({
                     topic: mqttTopics.station(deviceId).status,
                     payload: { status: "completed", deviceId, ts: Date.now() },
@@ -203,7 +204,7 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
                   setActiveOrders((prev) =>
                     prev.map((o) => (o.orderId === orderId ? { ...o, status: "COMPLETED", endTime: Date.now() } : o))
                   );
-                }, 2000);
+                }, duration + 500);
               });
           } else {
             console.warn(`[Master] Coffee config or PIN not found for ${deviceId}`);
