@@ -45,7 +45,7 @@ export function useMasterController() {
       ]);
 
       // Proactive Discovery: Ask "Who is there?"
-      console.log("Master connected. Broadcasting discovery...");
+      // console.log("Master connected. Broadcasting discovery...");
       publish({
         topic: mqttTopics.master.broadcast,
         payload: { type: "discovery", ts: Date.now() },
@@ -72,8 +72,9 @@ export function useMasterController() {
         if (msg.topic.endsWith("/hello")) {
           const stationId = payload.deviceId;
           if (!stationId) return;
+          if (stationId === "master") return; // Ignore self
 
-          console.log("Master received hello from:", stationId);
+          // console.log("Master received hello from:", stationId);
 
           // Mark as active
           setActiveStations((prev) => {
@@ -95,7 +96,7 @@ export function useMasterController() {
           }
 
           if (coffee) {
-            console.log(`Configuring ${stationId} with ${coffee.name}`);
+            // console.log(`Configuring ${stationId} with ${coffee.name}`);
             // Send Config
             const topic = mqttTopics.station(stationId).command;
             publish({

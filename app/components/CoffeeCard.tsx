@@ -1,6 +1,8 @@
 "use client";
 import React from "react";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
+import useDeviceType from "../hooks/useDeviceType";
 
 interface Sizes {
   small: { price: number; volume: string };
@@ -34,16 +36,21 @@ export default function CoffeeCard({ coffee }: CoffeeCardProps) {
   // Use the minimum price from sizes as the displayed price based on the design pattern "from $X"
   const startPrice = coffee.sizes.small.price;
   const currencySymbol = coffee.currency?.symbol ?? "$";
-
+  const deviceType = useDeviceType();
   return (
-    <div className="bg-white rounded-[24px] w-full max-w-[360px] p-3 pb-6 flex flex-col items-center gap-4 relative active:scale-90 transition-transform duration-200 cursor-pointer">
+    <div
+      className={cn(
+        "bg-white  w-full  p-3 flex  items-center gap-4 relative active:scale-90 transition-transform duration-200 cursor-pointer",
+        deviceType !== "fixed" ? "flex-row rounded-4xl" : "max-w-[360px] rounded-3xl pb-6 flex-col"
+      )}
+    >
       {/* Image Container */}
-      <div className="relative bg-quaternary rounded-[20px] w-full h-[316px] overflow-hidden flex items-center justify-center">
+      <div className="relative bg-quaternary rounded-[20px] w-full h-[316px] overflow-hidden flex items-center justify-center transform-gpu">
         <Image
           src={coffee.image}
           alt={coffee.name}
           fill
-          className="object-cover drop-shadow-xl"
+          className="object-cover "
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           priority={false}
         />
@@ -57,9 +64,14 @@ export default function CoffeeCard({ coffee }: CoffeeCardProps) {
       </div>
 
       {/* Content */}
-      <div className="flex flex-col gap-4.5  items-center w-full px-3">
+      <div className={cn("flex flex-col gap-4.5 items-center  w-full px-3")}>
         {/* Title */}
-        <div className="flex items-center  justify-between font-extrabold text-secondary text-2xl w-full gap-2">
+        <div
+          className={cn(
+            "flex items-center  justify-between font-extrabold text-secondary text-2xl w-full gap-2",
+            deviceType !== "fixed" ? "flex-col md:flex-row" : ""
+          )}
+        >
           <h3 className="truncate">{coffee.name}</h3>
           <span className="">
             {currencySymbol}

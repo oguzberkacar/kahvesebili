@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
 @theme {
+  --font-sans: var(--font-mont, "Mont"), ui-sans-serif, system-ui, -apple-system,
+    sans-serif;
+
   /* Brand Colors */
   --color-primary: #7ae1bf;
   --color-secondary: #18332f;

@@ -69,7 +69,7 @@ export function useStationController({ stationId, brokerUrl }: StationController
 
         // 0. Handle Broadcast Discovery (Master asking "Who is there?")
         if (msg.topic === mqttTopics.master.broadcast) {
-          console.log("Received Discovery Broadcast from Master");
+          // console.log("Received Discovery Broadcast from Master");
           // Respond with Hello immediately
           const topics = mqttTopics.station(effectiveStationId);
           publish({

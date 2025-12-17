@@ -6,6 +6,7 @@ import CoffeeDetail from "../components/CoffeeDetail";
 import Navbar from "../components/Navbar";
 import { cn } from "@/lib/utils";
 import { useMaster } from "../context/MasterContext";
+import useDeviceType from "../hooks/useDeviceType";
 
 export interface Sizes {
   small: { price: number; volume: string };
@@ -42,6 +43,7 @@ export default function OrderPage() {
 
   // Get active stations from Master Context
   const { activeStations } = useMaster();
+  const deviceType = useDeviceType();
 
   const handleCoffeeClick = (coffee: Coffee) => {
     //...
@@ -50,8 +52,13 @@ export default function OrderPage() {
   };
 
   const handleBack = () => {
-    if (isPaymentView) {
+    if (isPaymentSuccess) {
+      setIsPaymentSuccess(false);
       setIsPaymentView(false);
+      setActiveView("list");
+      setTimeout(() => {
+        setSelectedCoffee(null);
+      }, 500);
       return;
     }
     if (isPaymentView) {
@@ -67,8 +74,18 @@ export default function OrderPage() {
   };
 
   return (
-    <main className="min-h-screen w-full bg-white flex items-center justify-center p-0 md:p-8 overflow-auto">
-      <div className="w-full h-[100dvh] md:w-[800px] md:h-[1280px] relative bg-quaternary overflow-hidden shrink-0 flex flex-col">
+    <main
+      className={cn(
+        "min-h-screen w-full flex items-center justify-center overflow-auto",
+        deviceType === "fixed" ? "p-0 md:p-8 bg-white" : "bg-quaternary p-0 m-0 items-start"
+      )}
+    >
+      <div
+        className={cn(
+          " relative bg-quaternary overflow-hidden flex flex-col",
+          deviceType === "fixed" ? "w-[800px] h-[1280px]" : "w-full h-dvh"
+        )}
+      >
         {/* Sliding Container */}
         <Navbar
           backgroundColor="bg-black-2"
@@ -84,22 +101,31 @@ export default function OrderPage() {
           {/* LIST VIEW (Left Half) */}
           <div className="w-1/2 h-full flex flex-col items-center overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {/* Content Grid */}
-            <div className="w-full max-w-[800px] px-4 md:px-6 pb-24 pt-32">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div
+              className={cn(
+                "w-full  px-4 md:px-6 pb-24 pt-32",
+                deviceType === "fixed" ? "max-w-[800px]" : "max-w-7xl mx-auto"
+              )}
+            >
+              <div
+                className={cn("grid grid-cols-1 gap-4 md:grid-cols-2", deviceType !== "fixed" ? "gap-4 lg:gap-12" : "gap-4")}
+              >
                 {coffees.map((coffee) => {
-                  const isActive = activeStations.includes(`station${coffee.stationId}`);
+                  // const isActive = activeStations.includes(`station${coffee.stationId}`);
+                  const isActive = true;
                   return (
                     <div
                       key={coffee.id}
                       onClick={() => isActive && handleCoffeeClick(coffee as Coffee)}
                       className={cn(
                         "relative transition-all duration-300",
-                        !isActive && "opacity-60 grayscale cursor-not-allowed"
+                        !isActive && "bg-white-9  cursor-not-allowed"
+                        // deviceType === "fixed" ? "" : "w-[360px] mx-auto"
                       )}
                     >
                       <CoffeeCard coffee={coffee as Coffee} />
                       {!isActive && (
-                        <div className="absolute inset-0 bg-black/5 z-10 rounded-[32px] flex items-center justify-center">
+                        <div className="absolute inset-0 bg-white-8 z-10 rounded-4xl flex items-center justify-center">
                           <span className="bg-black/60 text-white px-4 py-2 rounded-full text-sm font-bold backdrop-blur-sm">
                             DEVICE OFFLINE
                           </span>

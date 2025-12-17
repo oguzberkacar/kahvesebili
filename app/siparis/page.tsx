@@ -15,27 +15,31 @@ import { useMaster } from "../context/MasterContext";
 import { cn } from "@/lib/utils";
 
 export default function SiparisPage() {
-  const [showSplash, setShowSplash] = React.useState(true);
+  const [showSplash, setShowSplash] = React.useState(false);
   const deviceType = useDeviceType();
+
   const { sendOrder } = useMaster(); // Ensure hook is active
 
   return (
     <>
       {showSplash && <SplashOverlay onFinish={() => setShowSplash(false)} />}
-      <main className="min-h-screen w-full bg-white flex items-center justify-center  overflow-auto">
+      <main className="min-h-screen w-full flex items-center justify-center bg-secondary overflow-auto">
         <div
           className={cn(
-            "  relative bg-secondary text-white flex flex-col items-center justify-center shrink-0 md:border-4 border-gray-800 shadow-2xl overflow-hidden",
+            "  relative bg-secondary text-white flex flex-col items-center justify-center  overflow-hidden",
             deviceType === "fixed" ? "w-[800px] h-[1280px]" : "w-full h-dvh"
           )}
         >
           <Navbar backgroundColor="bg-white-9" textColor="text-fi" />
-          <div className="w-full h-full flex flex-col items-center justify-center gap-12 md:gap-[135px]">
+          <div className="w-full h-full flex flex-col items-center justify-between grow my-8">
             <div className="scale-75 md:scale-100 transition-transform">
               <KardoraBaseLogo />
             </div>
-            <div className="scale-75 md:scale-100 transition-transform">
-              <OrderHereGraphic />
+            <div className={cn("scale-75 flex flex-col  font-extrabold  text-fi items-center justify-center text-center md:scale-100 transition-transform",
+              deviceType === "fixed" ? "text-[150px] leading-[174px]" : "text-[120px] leading-[124px]"
+            )}>
+              <span>ORDER</span>
+              <span>HERE</span>
             </div>
             <div className="relative scale-75 md:scale-100 transition-transform">
               <TransitionRibbon />
@@ -47,7 +51,7 @@ export default function SiparisPage() {
               </Link>
             </div>
             <div className="scale-75 md:scale-100 transition-transform">
-              <Reserved />
+              <span>© 2025 ALL RIGHTS RESERVED</span>
             </div>
           </div>
         </div>

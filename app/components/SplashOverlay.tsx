@@ -2,6 +2,8 @@
 import React, { useEffect } from "react";
 import KardoraLogo from "./KardoraLogo";
 import KardoraMark from "./KardoraMark";
+import useDeviceType from "../hooks/useDeviceType";
+import { cn } from "@/lib/utils";
 
 interface SplashOverlayProps {
   onFinish: () => void;
@@ -24,6 +26,11 @@ export default function SplashOverlay({ onFinish }: SplashOverlayProps) {
   const LOGO_HOLD_MS = 0;
   const LOGO_START_DELAY_MS = 0;
   const OVERLAY_RESTART_DELAY_MS = 700;
+
+  const deviceType = useDeviceType();
+
+  console.log("🚀 OBA ~ :32 ~ SplashOverlay ~ deviceType:", deviceType)
+
 
   useEffect(() => {
     setBarPercentage(0);
@@ -115,7 +122,12 @@ export default function SplashOverlay({ onFinish }: SplashOverlayProps) {
         isZooming ? "opacity-0 pointer-events-none" : "opacity-100"
       }`}
     >
-      <div className="w-[800px] h-[1280px] text-white flex flex-col items-center justify-center shrink-0 border-4 border-gray-800 shadow-2xl relative">
+      <div
+        className={cn(
+          " text-white flex flex-col items-center justify-center shrink-0   relative",
+          deviceType === "fixed" ? "w-[800px] h-[1280px]" : "w-full h-dvh"
+        )}
+      >
         {/* Main Content Container */}
         <div
           className={`w-full h-full flex flex-col items-center justify-center gap-10 px-6 transition-opacity duration-500`}

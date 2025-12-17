@@ -225,7 +225,7 @@ export default function StationPage() {
                         <span className="bg-[#65E5B4] h-full flex items-center px-8 text-lg font-black text-[#1F3933] rounded-l-full">
                           ORDER
                         </span>
-                        <span className="text-white text-lg font-bold uppercase tracking-wider">{order.size}</span>
+                        <span className="text-white text-lg font-bold uppercase tracking-wider ml-6">{order.size}</span>
                         <span className="flex-1 text-right pr-6 text-xl font-bold text-white">{order.orderId}</span>
                       </>
                     ) : (

@@ -9,10 +9,8 @@ export default function Home() {
   }
 
   if (env === "station") {
-    const stationId = process.env.STATION_ID;
-    if (stationId) {
-      redirect(`/station/${stationId}`);
-    }
+    // Redirect to the generic station page; the Station component reads the station ID from env variables.
+    redirect(`/station`);
   }
 
   return (

@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useMaster } from "../context/MasterContext";
+import useDeviceType from "../hooks/useDeviceType";
 
 // Re-defining interface locally if needed or import
 interface Sizes {
@@ -61,6 +62,8 @@ export default function CoffeeDetail({
   const currencySymbol = coffee.currency?.symbol ?? "$";
   const { sendOrder } = useMaster();
 
+  const deviceType = useDeviceType();
+
   // Payment Simulation Effect
   // Payment Simulation Effect
   useEffect(() => {
@@ -109,15 +112,17 @@ export default function CoffeeDetail({
     let timeout: NodeJS.Timeout;
     if (isPaymentSuccess) {
       timeout = setTimeout(() => {
-        router.push("/order");
+        // Use parent onBack to reset state
+        onBack();
       }, 15000); // 15 seconds
     }
     return () => clearTimeout(timeout);
-  }, [isPaymentSuccess, router]);
+  }, [isPaymentSuccess, onBack]);
 
   const handleBack = () => {
     if (isPaymentSuccess) {
-      router.push("/order");
+      // Use parent onBack to reset state
+      onBack();
     } else if (isWaitingPayment) {
       setIsWaitingPayment(false);
       setWaitingMethod(null);
@@ -144,13 +149,13 @@ export default function CoffeeDetail({
         {/* 2. Middle Section: Card & Order Info */}
         <div className="flex flex-col items-center gap-12 w-full">
           {/* Coffee Summary Card */}
-          <div className="bg-white rounded-[32px] p-8 w-full w-full shadow-xl">
+          <div className="bg-white rounded-4xl p-8 w-full w- shadow-xl">
             <div className="flex items-center gap-3 mb-4">
               <h3 className="text-3xl font-extrabold text-secondary">{coffee.name}</h3>
               <span className="px-3 py-1.5 rounded-md text-sm font-bold uppercase tracking-wider bg-fi text-secondary">
                 cold
               </span>
-              <span className="px-3 py-1.5 rounded-md text-sm font-bold uppercase tracking-wider bg-secondary text-white capitalize">
+              <span className="px-3 py-1.5 rounded-md text-sm font-bold  tracking-wider bg-secondary text-white capitalize">
                 {selectedSize}
               </span>
             </div>
@@ -161,10 +166,10 @@ export default function CoffeeDetail({
 
           {/* Order Number Pill */}
           <div className="bg-white/30 rounded-full pr-2 w-full max-w-2xl flex items-center justify-between gap-4">
-            <span className="bg-white rounded-full px-6 py-4 md:py-5 text-2xl md:text-[42px] font-extrabold leading-[56px] text-secondary shadow-sm">
+            <span className="bg-white rounded-full px-6 py-4 md:py-5 text-2xl md:text-[42px] font-extrabold leading-14 text-secondary shadow-sm">
               ORDER
             </span>
-            <span className="text-2xl md:text-[42px] font-extrabold leading-[56px] text-secondary px-4 tracking-wide">
+            <span className="text-2xl md:text-[42px] font-extrabold leading-14 text-secondary px-4 tracking-wide">
               {orderNumber}
             </span>
           </div>
@@ -203,9 +208,14 @@ export default function CoffeeDetail({
       >
         {/* SECTION 1: Top Content (Image + Title) */}
         <div
-          className={`w-full flex transition-all duration-700 ease-in-out ${
-            isPaymentView ? "flex-row px-8 items-center justify-center gap-6 max-h-[40vh]" : "flex-col items-center px-6"
-          }`}
+          // className={`w-full flex transition-all duration-700 ease-in-out ${
+          //   isPaymentView ? "flex-row px-8 items-center justify-center gap-6 max-h-[40vh]" : "flex-col items-center px-6"
+          // }`}
+          className={cn(
+            "w-full flex transition-all duration-700 ease-in-out ",
+            isPaymentView ? "flex-row px-8 items-center justify-center gap-6 max-h-[40vh]" : "flex-col items-center px-6",
+            deviceType === "fixed" ? "" : "flex-row!"
+          )}
         >
           {/* Image Container */}
           <div
@@ -232,12 +242,25 @@ export default function CoffeeDetail({
 
           {/* Title & Info Container */}
           <div
-            className={`flex flex-col transition-all duration-700 ease-in-out ${
-              isPaymentView ? "items-start text-left flex-1" : "items-center text-center w-full mt-2"
-            }`}
+            // className={`flex flex-col transition-all duration-700 ease-in-out ${
+            //   isPaymentView ? "items-start text-left flex-1" : "items-center text-center w-full mt-2"
+            // }`}
+            className={cn(
+              "flex flex-col transition-all duration-700 ease-in-out ",
+              isPaymentView || deviceType !== "fixed"
+                ? "items-start text-left flex-1"
+                : "items-center text-center w-full mt-2",
+              deviceType !== "fixed" ? "pl-8" : ""
+            )}
           >
-            <div className={`flex items-center gap-3 ${isPaymentView ? "mb-1 justify-start" : "mb-2 justify-center"}`}>
-              <h1 className="text-3xl md:text-[40px] font-extrabold leading-tight md:leading-[48px] text-secondary">
+            {/* <div className={`flex items-center gap-3 ${isPaymentView ? "mb-1 justify-start" : "mb-2 justify-center"}`}> */}
+            <div
+              className={cn(
+                "flex items-center gap-3 mb-2",
+                isPaymentView || deviceType !== "fixed" ? "justify-start" : "justify-center"
+              )}
+            >
+              <h1 className="text-3xl md:text-[40px] font-extrabold leading-tight md:leading-12 text-secondary">
                 {coffee.name}
               </h1>
               <div className="flex gap-2 items-center">
@@ -246,7 +269,7 @@ export default function CoffeeDetail({
                     key={tag}
                     className={`rounded-md font-bold uppercase tracking-wider
                       ${tag === "Cold" ? "bg-fi text-secondary" : "bg-orange-100 text-orange-800"}
-                      ${isPaymentView ? "px-2 py-0.5 text-xs" : "px-2 py-0.5 text-[17px] leading-[24px]"}
+                      ${isPaymentView ? "px-2 py-0.5 text-xs" : "px-2 py-0.5 text-[17px] leading-6"}
                     `}
                   >
                     {tag}
@@ -266,7 +289,7 @@ export default function CoffeeDetail({
                 isPaymentView ? "opacity-100 max-h-[500px]" : "opacity-0 max-h-0"
               }`}
             >
-              <p className="text-[24px] text-secondary font-semibold leading-[32px] overflow-hidden text-ellipsis line-clamp-2">
+              <p className="text-[24px] text-secondary font-semibold leading-8 overflow-hidden text-ellipsis line-clamp-2">
                 {coffee.description}
               </p>
 
@@ -282,10 +305,36 @@ export default function CoffeeDetail({
                 !isPaymentView ? "opacity-100 max-h-40" : "opacity-0 max-h-0"
               }`}
             >
-              <p className="text-center font-sans text-lg md:text-[24px] font-semibold leading-relaxed md:leading-[32px] text-secondary mx-auto">
+              <p
+                className={cn(
+                  "text-center font-sans text-lg md:text-[24px] font-semibold leading-relaxed md:leading-8 text-secondary mx-auto",
+                  deviceType !== "fixed" ? "text-left" : ""
+                )}
+              >
                 {coffee.description}
               </p>
             </div>
+            {deviceType !== "fixed" && !isPaymentView && (
+              <div className="flex justify-center items-center mb-4 text-6xl md:text-[81px] font-extrabold leading-12 text-secondary font-sans">
+                <span className="mr-4">{currencySymbol}</span>
+                <div className="h-[72px] md:h-24 overflow-hidden relative [--price-height:72px] md:[--price-height:96px]">
+                  <div
+                    className="flex flex-col transition-transform duration-500 ease-in-out"
+                    style={{
+                      transform: `translateY(calc(var(--price-height) * -${(["small", "medium", "large"] as const).indexOf(
+                        selectedSize
+                      )}))`,
+                    }}
+                  >
+                    {(["small", "medium", "large"] as const).map((s) => (
+                      <div key={s} className="h-[72px] md:h-24 flex items-center justify-start">
+                        {coffee.sizes[s].price.toFixed(2)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -298,17 +347,17 @@ export default function CoffeeDetail({
           <div
             className={`w-full max-w-sm transition-all duration-300 ease-in-out overflow-hidden ${
               showDetails ? "max-h-[500px] opacity-100 mb-6" : "max-h-0 opacity-0 mb-0"
-            }`}
+            } ${deviceType !== "fixed" ? "max-w-full! px-4" : ""}`}
           >
             {/* Roast Label */}
-            <div className="mb-4 text-center font-extrabold text-[24px] leading-[32px] text-secondary truncate">
+            <div className="mb-4 text-center font-extrabold text-[24px] leading-8 text-secondary truncate">
               {coffee.roast}
             </div>
             {/* Details Grid */}
-            <div className="flex flex-col gap-[56px] text-center">
+            <div className={cn("flex flex-col gap-14 text-center", deviceType !== "fixed" ? "gap-4" : "")}>
               {Object.entries(coffee.details).map(([key, value]) => (
                 <div key={key} className="flex flex-col gap-1">
-                  <span className="text-[24px] leading-[32px] text-secondary">
+                  <span className="text-[24px] leading-8 text-secondary">
                     <span className="font-extrabold">{key}: </span>
                     <span className="font-bold">{value}</span>
                   </span>
@@ -319,7 +368,7 @@ export default function CoffeeDetail({
 
           <button
             onClick={() => setShowDetails(!showDetails)}
-            className="rounded-full bg-[rgba(0,0,0,0.06)] flex justify-center items-center px-8 py-[18px] text-secondary font-sans text-[24px] font-extrabold leading-[24px] truncate transition-colors hover:bg-black/10 mt-4 cursor-pointer"
+            className="rounded-full bg-black-2 flex justify-center items-center px-8 py-[18px] text-secondary font-sans text-[24px] font-extrabold leading-6 truncate transition-colors hover:bg-black/10 mt-4 cursor-pointer"
           >
             {showDetails ? "Back" : "View Detail"}
           </button>
@@ -332,10 +381,10 @@ export default function CoffeeDetail({
             transform: showDetails ? "translateY(120%)" : "translateY(0%)",
           }}
         >
-          {!isPaymentView && (
-            <div className="flex justify-center items-center mb-4 text-6xl md:text-[81px] font-extrabold leading-[48px] text-secondary font-sans">
+          {!isPaymentView && deviceType !== "fixed" && (
+            <div className="flex justify-center items-center mb-4 text-6xl md:text-[81px] font-extrabold leading-12 text-secondary font-sans">
               <span className="mr-4">{currencySymbol}</span>
-              <div className="h-[72px] md:h-[96px] overflow-hidden relative [--price-height:72px] md:[--price-height:96px]">
+              <div className="h-[72px] md:h-24 overflow-hidden relative [--price-height:72px] md:[--price-height:96px]">
                 <div
                   className="flex flex-col transition-transform duration-500 ease-in-out"
                   style={{
@@ -345,7 +394,7 @@ export default function CoffeeDetail({
                   }}
                 >
                   {(["small", "medium", "large"] as const).map((s) => (
-                    <div key={s} className="h-[72px] md:h-[96px] flex items-center justify-start">
+                    <div key={s} className="h-[72px] md:h-24 flex items-center justify-start">
                       {coffee.sizes[s].price.toFixed(2)}
                     </div>
                   ))}
@@ -405,9 +454,19 @@ export default function CoffeeDetail({
             }}
           >
             {/* Slide 1: Size & Payment Button */}
-            <div className="w-full md:w-[600px] flex flex-col items-center mt-8 justify-end ">
+            <div
+              className={cn(
+                "w-1/2 flex flex-col items-center mt-8 justify-end ",
+                deviceType === "fixed" ? "md:w-[600px]" : ""
+              )}
+            >
               {/* Size Selection */}
-              <div className="w-full md:w-[600px] bg-[#E9E9E9] rounded-full flex items-center relative mb-8">
+              <div
+                className={cn(
+                  "w-full  bg-[#E9E9E9] rounded-full flex items-center relative mb-8",
+                  deviceType === "fixed" ? "md:w-[600px]" : "w-[calc(100%-32px)] "
+                )}
+              >
                 <div
                   className="absolute top-0 bottom-0 bg-[#1F3933] rounded-full transition-transform duration-300 ease-out z-0 shadow-sm"
                   style={{
@@ -422,7 +481,7 @@ export default function CoffeeDetail({
                   <button
                     key={size}
                     onClick={() => setSelectedSize(size)}
-                    className={`flex-1 relative z-10 text-center py-[36px] font-extrabold text-[24px] leading-[24px] transition-colors duration-300 capitalize cursor-pointer ${
+                    className={`flex-1 relative z-10 text-center py-9 font-extrabold text-[24px] leading-6 transition-colors duration-300 capitalize cursor-pointer ${
                       selectedSize === size ? "text-white" : "text-black/40"
                     }`}
                   >
@@ -441,9 +500,11 @@ export default function CoffeeDetail({
 
             {/* Slide 2: Payment Methods & Waiting State */}
             <div className="w-1/2 flex flex-col items-center justify-end px-2">
-              <div className="flex flex-col items-center justify-center w-full max-w-xs">
+              <div className={cn("flex flex-col items-center justify-center w-full max-w-xs",
+                deviceType !== "fixed" ? "max-w-full! px-4" : ""
+              )}>
                 {/* Title & Spinner */}
-                <div className="flex w-[600px] h-[284px] relative items-center justify-center">
+                <div className="flex w-full max-w-[600px] h-[284px] relative items-center justify-center">
                   {/* Cash Button */}
                   <button
                     onClick={() => handleMethodClick("cash")}
@@ -453,7 +514,7 @@ export default function CoffeeDetail({
                               ? "w-0 h-0 p-0 shadow-none opacity-0 pointer-events-none" // Hide if card selected
                               : isWaitingPayment && waitingMethod === "cash"
                               ? "w-full h-[120px] p-12 bg-[#E2E2E2] z-20" // Transform to Cancel style
-                              : "w-[284px] h-full p-12 bg-[#E2E2E2] left-0 top-0" // Default Grid pos
+                              : "w-[48%] max-w-[284px] h-full p-12 bg-[#E2E2E2] left-0 top-0" // Default Grid pos
                           }
                         `}
                   >
@@ -486,7 +547,7 @@ export default function CoffeeDetail({
                               ? "w-0 h-0 p-0 shadow-none opacity-0 pointer-events-none" // Hide if cash selected
                               : isWaitingPayment && waitingMethod === "card"
                               ? "w-full h-[120px] p-12 bg-[#E2E2E2] z-20" // Transform to Cancel style (Grey bg to cancel)
-                              : "w-[284px] h-full p-12 bg-[#65E5B4] right-0 top-0" // Default Grid pos
+                              : "w-[48%] max-w-[284px] h-full p-12 bg-[#65E5B4] right-0 top-0" // Default Grid pos
                           }
                         `}
                   >
