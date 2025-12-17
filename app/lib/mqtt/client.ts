@@ -1,8 +1,4 @@
-import mqtt, {
-  type IClientOptions,
-  type MqttClient,
-  type ISubscriptionGrant,
-} from "mqtt";
+import mqtt, { type IClientOptions, type MqttClient, type ISubscriptionGrant } from "mqtt";
 import {
   type ConnectionState,
   type IncomingMessage,
@@ -28,6 +24,7 @@ export function connectMqttClient(config: MqttConnectConfig): MqttClient {
     reconnectPeriod = 1500,
     connectTimeout = 5000,
     protocolVersion = 4 as ProtocolVersion,
+    will,
   } = config;
 
   const options: IClientOptions = {
@@ -39,6 +36,7 @@ export function connectMqttClient(config: MqttConnectConfig): MqttClient {
     reconnectPeriod,
     connectTimeout,
     protocolVersion,
+    will,
   };
 
   if (protocol) options.protocol = protocol;
@@ -49,7 +47,7 @@ export function connectMqttClient(config: MqttConnectConfig): MqttClient {
 
 export async function subscribeTopics(
   client: MqttClient,
-  subscriptions: SubscriptionRequest[],
+  subscriptions: SubscriptionRequest[]
 ): Promise<ISubscriptionGrant[]> {
   const grants: ISubscriptionGrant[] = [];
 
@@ -61,18 +59,12 @@ export async function subscribeTopics(
   return grants;
 }
 
-export async function unsubscribeTopics(
-  client: MqttClient,
-  topics: string[],
-): Promise<void> {
+export async function unsubscribeTopics(client: MqttClient, topics: string[]): Promise<void> {
   if (!topics.length) return;
   await client.unsubscribeAsync(topics);
 }
 
-export async function publishMessage(
-  client: MqttClient,
-  message: PublishMessage,
-): Promise<void> {
+export async function publishMessage(client: MqttClient, message: PublishMessage): Promise<void> {
   const payload = normalizePayload(message.payload);
   await client.publishAsync(message.topic, payload, {
     qos: message.qos ?? DEFAULT_QOS,
@@ -86,10 +78,7 @@ export function normalizePayload(payload: PublishMessage["payload"]): Buffer | s
   return JSON.stringify(payload);
 }
 
-export function attachMessageHandler(
-  client: MqttClient,
-  onMessage: (msg: IncomingMessage) => void,
-): () => void {
+export function attachMessageHandler(client: MqttClient, onMessage: (msg: IncomingMessage) => void): () => void {
   const handler = (topic: string, payload: Buffer) => {
     const text = payload.toString();
     const json = safeParseJson(text);

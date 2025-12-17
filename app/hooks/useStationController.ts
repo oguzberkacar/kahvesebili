@@ -51,6 +51,17 @@ export function useStationController({ stationId, brokerUrl }: StationController
     role: "station",
     deviceId: effectiveStationId,
     clientId: effectiveStationId, // keep it stable
+    will: {
+      topic: mqttTopics.status(effectiveStationId),
+      payload: JSON.stringify({
+        id: effectiveStationId,
+        type: "station",
+        state: "DISCONNECTED",
+        ts: Date.now(),
+      }),
+      retain: true,
+      qos: 0,
+    },
   });
 
   // 4. Local State (Syncs with Shared State)

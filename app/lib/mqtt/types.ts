@@ -25,6 +25,12 @@ export type MqttConnectConfig = {
   reconnectPeriod?: number;
   connectTimeout?: number;
   protocolVersion?: ProtocolVersion;
+  will?: {
+    topic: string;
+    payload: string | Buffer;
+    qos?: QoSLevel;
+    retain?: boolean;
+  };
 } & MqttCredentials;
 
 export type SubscriptionRequest = {
