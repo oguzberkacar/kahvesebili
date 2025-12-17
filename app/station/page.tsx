@@ -86,6 +86,7 @@ export default function StationPage() {
     handleSelectOrder,
     handleStartOrder,
     handleReset,
+    handleSafeReset,
     connectionState,
   } = useStationController();
   const [animationStep, setAnimationStep] = useState(0);
@@ -327,7 +328,7 @@ export default function StationPage() {
               <p className="text-[#1F3933] text-2xl mb-8">Your drink is ready.</p>
 
               <button
-                onClick={handleReset} // Use existing handleReset for now, effectively "Done"
+                onClick={handleSafeReset} // Use Safe Reset to keep other orders
                 className="bg-[#1F3933] text-white text-xl font-bold px-12 py-4 rounded-full shadow-lg hover:bg-[#152925] transition-transform active:scale-95"
               >
                 DONE
