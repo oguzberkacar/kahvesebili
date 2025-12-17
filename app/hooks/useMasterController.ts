@@ -42,11 +42,13 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
     if (connectionState === "connected") {
       // Wildcards might be blocked by ACL. Subscribe explicitly to known stations.
       // Wildcards might be blocked by ACL. Subscribe explicitly to known stations.
-      // PURE CONNECTION TEST: No subscriptions at all
-      // If loop CONTINUES, problem is NOT ACL but client-side (ID conflict, React double-mount, or auth)
-      // If loop STOPS, problem IS with subscriptions/ACL
-      console.log("[Master] PURE CONNECTION TEST - No subscriptions");
-      // subscribe([...]); // ALL DISABLED
+      // Wildcard subscriptions - Broker now configured with allow_anonymous true
+      console.log("[Master] Subscribing with wildcards...");
+      subscribe([
+        { topic: "station/+/hello", qos: 0 },
+        { topic: "station/+/events", qos: 0 },
+        { topic: "station/+/status", qos: 0 },
+      ]);
 
       /* EXPLICIT SUBSCRIPTIONS (Commented out for test)
       const explicitSubscriptions: { topic: string; qos: 0 | 1 | 2 }[] = [];
