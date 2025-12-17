@@ -42,6 +42,16 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
     if (connectionState === "connected") {
       // Wildcards might be blocked by ACL. Subscribe explicitly to known stations.
       // Wildcards might be blocked by ACL. Subscribe explicitly to known stations.
+      // TEST: Try Wildcard Subscription to check broker ACL
+      // If this causes a disconnection loop, then Wildcards are BLOCKED.
+      console.log("[Master] Testing Wildcard Subscription...");
+      subscribe([
+        { topic: "station/+/hello", qos: 0 },
+        { topic: "station/+/events", qos: 0 },
+        { topic: "station/+/status", qos: 0 },
+      ]);
+
+      /* EXPLICIT SUBSCRIPTIONS (Commented out for test)
       const explicitSubscriptions: { topic: string; qos: 0 | 1 | 2 }[] = [];
       const KNOWN_STATIONS = ["station1", "station2", "station3", "station4", "station5"];
 
@@ -51,6 +61,7 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
       });
 
       subscribe(explicitSubscriptions);
+      */
 
       // subscribe([
       //   ...explicitSubscriptions,
