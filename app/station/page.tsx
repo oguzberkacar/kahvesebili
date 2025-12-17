@@ -142,7 +142,7 @@ export default function StationPage() {
   return (
     <div
       className={cn(
-        "w-full h-screen bg-primary  flex items-center justify-center p-4 transition-all duration-700 ease-in-out",
+        "w-full h-screen bg-primary  flex items-center justify-center  transition-all duration-700 ease-in-out",
         stationState === "PROCESSING" ? "bg-secondary" : "bg-primary"
       )}
     >
