@@ -188,7 +188,7 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
                   setActiveOrders((prev) =>
                     prev.map((o) => (o.orderId === orderId ? { ...o, status: "COMPLETED", endTime: Date.now() } : o))
                   );
-                }, 10000); // 10 seconds
+                }, 2000); // 2 seconds (shortened for testing/UX)
               })
               .catch((err) => {
                 console.error("[Master] GPIO Call Error", err);
@@ -204,7 +204,7 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
                   setActiveOrders((prev) =>
                     prev.map((o) => (o.orderId === orderId ? { ...o, status: "COMPLETED", endTime: Date.now() } : o))
                   );
-                }, 10000);
+                }, 2000);
               });
           } else {
             console.warn(`[Master] Coffee config or PIN not found for ${deviceId}`);
