@@ -6,10 +6,7 @@ function boolFromEnv(value: string | undefined, fallback: boolean) {
   return value.toLowerCase() === "true";
 }
 
-function parseProtocolVersion(
-  value: string | undefined,
-  fallback: ProtocolVersion = 4,
-): ProtocolVersion {
+function parseProtocolVersion(value: string | undefined, fallback: ProtocolVersion = 4): ProtocolVersion {
   if (!value) return fallback;
   const num = Number(value);
   return num === 3 || num === 4 || num === 5 ? (num as ProtocolVersion) : fallback;
@@ -35,8 +32,7 @@ export function resolveRoleFromEnv(): DeviceRole {
 
 export function getMqttConfigFromEnv(): MqttConnectConfig {
   const role = resolveRoleFromEnv();
-  const deviceIdEnv =
-    process.env.NEXT_PUBLIC_DEVICE_ID || process.env.STATION_ID;
+  const deviceIdEnv = process.env.NEXT_PUBLIC_DEVICE_ID || process.env.STATION_ID;
   const deviceId = deviceIdEnv || (role === "station" ? "station-1" : "master");
 
   const url = process.env.NEXT_PUBLIC_MQTT_URL || "ws://localhost:9001";
@@ -60,12 +56,6 @@ export function getMqttConfigFromEnv(): MqttConnectConfig {
   };
 }
 
-export const topicHints = {
-  masterHello: mqttTopics.master.helloAll,
-  masterStatus: mqttTopics.master.statusAll,
-  masterEvents: mqttTopics.master.eventsAll,
-  stationHello: (deviceId: string) => mqttTopics.station(deviceId).hello,
-  stationStatus: (deviceId: string) => mqttTopics.station(deviceId).status,
-  stationEvents: (deviceId: string) => mqttTopics.station(deviceId).events,
-  stationCommand: (deviceId: string) => mqttTopics.station(deviceId).command,
-};
+// Deprecated hints removed for new Shared State architecture.
+// Use mqttTopics directly from topics.ts
+export const topicHints = {};
