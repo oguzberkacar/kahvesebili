@@ -257,16 +257,29 @@ export function useStationController({ stationId, brokerUrl }: StationController
   }, [publish, effectiveStationId, effectiveOrderId]);
 
   const handleReset = useCallback(() => {
-    // Force IDLE
+    // 1. Remove the processed order from the queue
+    // Use effectiveOrderId (the one currently active/selected) or just remove the first one if logic implies priority?
+    // Since we complete the 'selected' one, let's remove that.
+    const completedId = effectiveOrderId;
+
+    // Filter out the completed order
+    const nextOrders = sharedState.orders.filter((o) => o.orderId !== completedId);
+
+    // 2. Determine Next State
+    const nextState = nextOrders.length > 0 ? "ORDER_RECEIVED" : "IDLE";
+
+    // 3. Publish New State
     publishState({
       id: effectiveStationId,
       type: "station",
-      state: "IDLE",
-      orders: [],
+      state: nextState,
+      orders: nextOrders,
       ts: Date.now(),
     });
+
+    // Clear selection so UI picks the next one automatically or waits for user
     setInternalSelectedOrderId(null);
-  }, [publishState, effectiveStationId]);
+  }, [publishState, effectiveStationId, sharedState.orders, effectiveOrderId]);
 
   const handleSafeReset = handleReset; // Same for now
 
