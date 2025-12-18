@@ -280,11 +280,21 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
       }))
     );
 
+  const refreshNetwork = useCallback(() => {
+    console.log("[Master] Refreshing Network... Sending ONLINE broadcast.");
+    publish({
+      topic: mqttTopics.masterStatus,
+      payload: { state: "ONLINE", ts: Date.now() },
+      retain: true,
+    });
+  }, [publish]);
+
   return {
     connectionState,
     sendOrder,
     activeStations,
     activeOrders,
-    stationStates, // Expose full state map if needed
+    stationStates,
+    refreshNetwork,
   };
 }

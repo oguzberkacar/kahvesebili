@@ -52,8 +52,10 @@ export function useMaster() {
     return {
       activeStations: [] as string[],
       activeOrders: [] as any[], // fallback
+      stationStates: {},
       connectionState: "idle" as const,
       sendOrder: () => console.warn("Cannot send order: Not Master"),
+      refreshNetwork: () => console.warn("Cannot refresh: Not Master"),
     };
   }
   return context;
