@@ -70,4 +70,4 @@ ssh "$TARGET_HOST" <<EOF
   sudo systemctl start kahvesebili
   echo "✔ deployed & restarted"
 EOF
-ssh "$TARGET_HOST" 'sudo /usr/local/bin/chromium-reload || true'
+ssh "$TARGET_HOST" 'sudo systemctl restart kiosk || true'
