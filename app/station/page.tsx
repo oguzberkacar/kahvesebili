@@ -370,9 +370,14 @@ export default function StationPage() {
             {stationState === "ORDER_RECEIVED" && (
               <button
                 onClick={handleStartOrder}
+                onTouchEnd={(e) => {
+                  e.preventDefault(); // Prevent ghost clicks if needed, or just let it fire
+                  if (!selectedOrderId) return;
+                  handleStartOrder();
+                }}
                 disabled={!selectedOrderId}
                 className={cn(
-                  "absolute z-10 text-[#AFEADC] text-3xl font-extrabold px-12 py-6 rounded-full shadow-lg transition-all duration-300 animate-in slide-in-from-bottom-20",
+                  "absolute z-50 text-[#AFEADC] text-3xl font-extrabold px-12 py-6 rounded-full shadow-lg transition-all duration-300 animate-in slide-in-from-bottom-20",
                   selectedOrderId
                     ? "bg-[#1F3933] hover:shadow-xl hover:bg-[#152925] active:scale-95"
                     : "bg-[#1F3933]/50 cursor-not-allowed opacity-50"
