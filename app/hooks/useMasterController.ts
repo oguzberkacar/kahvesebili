@@ -118,7 +118,7 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
       }
 
       const isCold = coffee.tags && coffee.tags.includes("Cold");
-      const duration = isCold ? 7000 : 6000;
+      const duration = isCold ? 4000 : 6000;
 
       console.log(`[Master] Triggering GPIO PIN ${coffee.pin} for ${duration}ms`);
 
