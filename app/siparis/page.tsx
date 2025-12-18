@@ -1,61 +1,45 @@
 "use client";
-import React, { useEffect } from "react";
-import Link from "next/link";
-import KardoraBaseLogo from "../components/KardoraBaseLogo";
-import OrderHereGraphic from "../components/OrderHereGraphic";
-import TransitionRibbon from "../components/TransitionRibbon";
-import ArrowIcon from "../components/ArrowIcon";
-import Reserved from "../components/Reserved";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
-import SplashOverlay from "../components/SplashOverlay";
-import Navbar from "../components/Navbar";
+import React, { useState } from "react";
 import useDeviceType from "../hooks/useDeviceType";
-import { useMaster } from "../context/MasterContext";
 import { cn } from "@/lib/utils";
+import GreetingView from "../components/GreetingView";
+import OrderView from "../components/OrderView";
 
-export default function SiparisPage() {
-  const [showSplash, setShowSplash] = React.useState(false);
+export default function MasterSPAPage() {
+  const [activeView, setActiveView] = useState<"greeting" | "order">("greeting");
   const deviceType = useDeviceType();
 
-  const { sendOrder } = useMaster(); // Ensure hook is active
-
   return (
-    <>
-      {showSplash && <SplashOverlay onFinish={() => setShowSplash(false)} />}
-      <main className="min-h-screen w-full flex items-center justify-center bg-secondary overflow-auto">
+    <main className="min-h-screen w-full flex items-center justify-center bg-secondary overflow-hidden">
+      <div
+        className={cn(
+          "relative bg-secondary text-white flex flex-col items-center justify-center overflow-hidden",
+          deviceType === "fixed" ? "w-[800px] h-[1280px]" : "w-full h-dvh"
+        )}
+      >
+        {/* Render both views but control visibility/stacking */}
+
+        {/* Greeting View: Visible when activeView is greeting */}
         <div
           className={cn(
-            "  relative bg-secondary text-white flex flex-col items-center justify-center  overflow-hidden",
-            deviceType === "fixed" ? "w-[800px] h-[1280px]" : "w-full h-dvh"
+            "absolute inset-0 transition-transform duration-500 ease-in-out z-10",
+            activeView === "greeting" ? "translate-x-0" : "-translate-x-full"
           )}
         >
-          <Navbar backgroundColor="bg-white-9" textColor="text-fi" />
-          <div className="w-full h-full flex flex-col items-center justify-between grow my-8">
-            <div className="scale-75 md:scale-100 transition-transform">
-              <KardoraBaseLogo />
-            </div>
-            <div className={cn("scale-75 flex flex-col  font-extrabold  text-fi items-center justify-center text-center md:scale-100 transition-transform",
-              deviceType === "fixed" ? "text-[150px] leading-[174px]" : "text-[120px] leading-[124px]"
-            )}>
-              <span>ORDER</span>
-              <span>HERE</span>
-            </div>
-            <div className="relative scale-75 md:scale-100 transition-transform">
-              <TransitionRibbon />
-              <Link
-                href={"/order"}
-                className="bg-fi rounded-full h-[206px] w-[206px] absolute left-1/2 bottom-0 -translate-x-1/2 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
-              >
-                <ArrowIcon />
-              </Link>
-            </div>
-            <div className="scale-75 md:scale-100 transition-transform">
-              <span>© 2025 ALL RIGHTS RESERVED</span>
-            </div>
-          </div>
+          <GreetingView onStart={() => setActiveView("order")} />
         </div>
-      </main>
-    </>
+
+        {/* Order View: Visible when activeView is order */}
+        <div
+          className={cn(
+            "absolute inset-0 transition-transform duration-500 ease-in-out z-20",
+            activeView === "order" ? "translate-x-0" : "translate-x-full"
+          )}
+        >
+          {/* Only mount or keep active if needed, but keeping it mounted preserves state (scroll pos etc) */}
+          <OrderView isActive={activeView === "order"} onBackToGreeting={() => setActiveView("greeting")} />
+        </div>
+      </div>
+    </main>
   );
 }
