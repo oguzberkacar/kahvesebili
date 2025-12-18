@@ -19,6 +19,7 @@ echo "==> clean & build"
 rm -rf .next .deploy_station deploy_station.tar.gz
 
 npm ci
+echo "Building for DEVICE_ID: $STATION_ID"
 npm run build:station -- "$STATION_ID" "$APP_ENV"
 
 echo "==> assemble .deploy_station"

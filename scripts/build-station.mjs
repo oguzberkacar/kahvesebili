@@ -10,6 +10,9 @@ if (!stationId) {
   process.exit(1);
 }
 
+console.log(`[Build] Starting build for DEVICE_ID: ${stationId}, APP_ENV: ${appEnv}`);
+console.log(`[Build] NEXT_PUBLIC_DEVICE_ID set to: ${stationId}`);
+
 const child = spawn("npx", ["next", "build"], {
   stdio: "inherit",
   env: {
