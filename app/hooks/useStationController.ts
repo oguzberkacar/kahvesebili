@@ -12,7 +12,7 @@ export type StationSharedState = {
   id: string;
   type: "station";
   state: "IDLE" | "ORDER_RECEIVED" | "PROCESSING" | "COMPLETED" | "DISCONNECTED";
-  state: "IDLE" | "ORDER_RECEIVED" | "PROCESSING" | "COMPLETED" | "DISCONNECTED";
+
   orders: {
     orderId: string;
     size: string;
@@ -219,24 +219,42 @@ export function useStationController({ stationId, brokerUrl }: StationController
 
   // 7. Actions
 
-  const handleStartOrder = useCallback(() => {
-    if (sharedState.orders.length === 0) return;
-    const currentOrder = sharedState.orders[0];
+  // 4c. Local Selection State (For manual picking from queue)
+  const [internalSelectedOrderId, setInternalSelectedOrderId] = useState<string | null>(null);
 
-    console.log("[Station] Sending START Event...");
+  // Derived Selection: Use internal if valid, else default to first
+  const effectiveOrderId = useMemo(() => {
+    if (internalSelectedOrderId && sharedState.orders.some((o) => o.orderId === internalSelectedOrderId)) {
+      return internalSelectedOrderId;
+    }
+    return sharedState.orders.length > 0 ? sharedState.orders[0].orderId : null;
+  }, [internalSelectedOrderId, sharedState.orders]);
+
+  // Actions
+  const handleSelectOrder = useCallback((orderId: string) => {
+    setInternalSelectedOrderId(orderId);
+  }, []);
+
+  const handleStartOrder = useCallback(() => {
+    if (!effectiveOrderId) return;
+
+    // Find the order details just to be safe
+    // const order = sharedState.orders.find(o => o.orderId === effectiveOrderId);
+
+    console.log(`[Station] Sending START Event for ${effectiveOrderId}...`);
     // 1. Emit Event (momentary)
     publish({
       topic: mqttTopics.events,
       payload: {
         type: "START",
         stationId: effectiveStationId,
-        orderId: currentOrder.orderId,
+        orderId: effectiveOrderId,
         ts: Date.now(),
       },
     });
 
     // 2. Optimistic Update? No, wait for Master to set PROCESSING.
-  }, [publish, effectiveStationId, sharedState.order]);
+  }, [publish, effectiveStationId, effectiveOrderId]);
 
   const handleReset = useCallback(() => {
     // Force IDLE
@@ -247,6 +265,7 @@ export function useStationController({ stationId, brokerUrl }: StationController
       orders: [],
       ts: Date.now(),
     });
+    setInternalSelectedOrderId(null);
   }, [publishState, effectiveStationId]);
 
   const handleSafeReset = handleReset; // Same for now
@@ -255,9 +274,9 @@ export function useStationController({ stationId, brokerUrl }: StationController
     stationState: sharedState.state, // Map to legacy string
     coffeeConfig,
     orders: sharedState.orders, // Return actual queue
-    selectedOrderId: sharedState.orders.length > 0 ? sharedState.orders[0].orderId : null,
+    selectedOrderId: effectiveOrderId,
     handleStartOrder,
-    handleSelectOrder: () => {}, // No op, single order now
+    handleSelectOrder,
     handleReset,
     handleSafeReset,
     connectionState,

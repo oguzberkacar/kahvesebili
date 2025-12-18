@@ -94,6 +94,9 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
           // Simple State Sync
           const stationId = payload.id;
           if (stationId && payload.type === "station") {
+            if (payload.state === "DISCONNECTED") {
+              console.log(`[Master] Station ${stationId} reported DISCONNECTED`);
+            }
             setStationStates((prev) => ({
               ...prev,
               [stationId]: payload,
