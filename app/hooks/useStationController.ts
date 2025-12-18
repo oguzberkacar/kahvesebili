@@ -20,6 +20,7 @@ export type StationSharedState = {
     recipeId: string;
     customerName?: string;
   }[];
+  duration?: number;
   ts: number;
 };
 
@@ -300,5 +301,6 @@ export function useStationController({ stationId, brokerUrl }: StationController
     handleSafeReset,
     connectionState,
     masterState,
+    currentDuration: sharedState.duration,
   };
 }

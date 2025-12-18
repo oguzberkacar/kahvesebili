@@ -89,6 +89,7 @@ export default function StationPage() {
     handleSafeReset,
     connectionState,
     masterState,
+    currentDuration,
   } = useStationController();
   const [animationStep, setAnimationStep] = useState(0);
 
@@ -97,9 +98,15 @@ export default function StationPage() {
     let timeout: NodeJS.Timeout;
     if (stationState === "PROCESSING") {
       if (animationStep < 2) {
-        // Step 0 -> 1: Fast (1s)
-        // Step 1 -> 2: Slower for filling (3s)
-        const delay = animationStep === 0 ? 1000 : 3500;
+        // Calculate delays based on provided duration or default (6000ms)
+        const totalDuration = currentDuration || 6000;
+
+        // Distribution: 20% for first step, 80% for filling
+        const firstStepDelay = totalDuration * 0.2;
+        const secondStepDelay = totalDuration * 0.8;
+
+        const delay = animationStep === 0 ? firstStepDelay : secondStepDelay;
+
         timeout = setTimeout(() => {
           setAnimationStep((prev) => prev + 1);
         }, delay);
@@ -108,7 +115,7 @@ export default function StationPage() {
       setAnimationStep(0);
     }
     return () => clearTimeout(timeout);
-  }, [stationState, animationStep]);
+  }, [stationState, animationStep, currentDuration]);
 
   // Not Active / Disconnected / Connection Error View
   if (stationState === "DISCONNECTED" || connectionState !== "connected" || masterState === "OFFLINE" || !coffeeConfig) {

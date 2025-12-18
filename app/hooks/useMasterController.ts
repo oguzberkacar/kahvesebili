@@ -19,6 +19,7 @@ export type StationSharedState = {
     recipeId: string;
     customerName?: string;
   }[];
+  duration?: number;
   ts: number;
 };
 
@@ -124,6 +125,7 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
       // 1. Update State to PROCESSING (Retained) -> Station shows animation
       updateStationState(stationId, {
         state: "PROCESSING",
+        duration: duration, // Send duration to Station
       });
 
       // 2. Call API
@@ -138,21 +140,22 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
           // ... handle success/fail log ...
           console.log("[Master] GPIO API Response:", res.status);
 
-          // 3. Wait Duration + Buffer
+          // 3. Wait Duration (Exact duration, removed buffer)
           setTimeout(() => {
             console.log(`[Master] Sequence Done. Setting ${stationId} to COMPLETED.`);
             // 4. Update State to COMPLETED (Retained) -> Station shows Enjoy
             updateStationState(stationId, {
               state: "COMPLETED",
+              duration: undefined, // Clear duration
             });
-          }, duration + 500);
+          }, duration);
         })
         .catch((err) => {
           console.error("GPIO Error", err);
           // Recovery
           setTimeout(() => {
             updateStationState(stationId, { state: "COMPLETED" });
-          }, duration + 500);
+          }, duration);
         });
     },
     [updateStationState]
