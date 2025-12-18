@@ -35,7 +35,7 @@ export function getMqttConfigFromEnv(): MqttConnectConfig {
   const deviceIdEnv = process.env.NEXT_PUBLIC_DEVICE_ID || process.env.STATION_ID;
   const deviceId = deviceIdEnv || (role === "station" ? "station-1" : "master");
 
-  const url = process.env.NEXT_PUBLIC_MQTT_URL || "ws://localhost:9001";
+  const url = process.env.NEXT_PUBLIC_MQTT_URL || "ws://192.168.1.9:9001";
   const clientId = deviceId;
   const path = process.env.NEXT_PUBLIC_MQTT_PATH;
 
