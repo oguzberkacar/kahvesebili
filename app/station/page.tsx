@@ -99,7 +99,7 @@ export default function StationPage() {
     if (stationState === "PROCESSING") {
       if (animationStep < 2) {
         // Calculate delays based on provided duration or default (6000ms)
-        const totalDuration = currentDuration || 6000;
+        const totalDuration = 4000;
 
         // Distribution: 20% for first step, 80% for filling
         const firstStepDelay = totalDuration * 0.2;
