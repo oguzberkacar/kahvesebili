@@ -27,10 +27,10 @@ mkdir -p .deploy_station
 copy_dir() {
   local src="$1"
   local dst="$2"
+  mkdir -p "$dst"
   if command -v rsync >/dev/null 2>&1; then
     rsync -a "$src"/. "$dst"/.
   else
-    mkdir -p "$dst"
     cp -a "$src"/. "$dst"/
   fi
 }
