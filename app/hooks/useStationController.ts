@@ -11,7 +11,7 @@ import coffees from "../data/coffees.json";
 export type StationSharedState = {
   id: string;
   type: "station";
-  state: "IDLE" | "ORDER_RECEIVED" | "PROCESSING" | "COMPLETED";
+  state: "IDLE" | "ORDER_RECEIVED" | "PROCESSING" | "COMPLETED" | "DISCONNECTED";
   order: {
     orderId: string;
     size: string;
@@ -118,7 +118,8 @@ export function useStationController({ stationId, brokerUrl }: StationController
       console.log(`[Station] Connected. Subscribing to self: ${topic}`);
 
       subscribe([
-        { topic, qos: 0 }, // Subscribe to my own state (Master updates me here)
+        { topic, qos: 0 }, // Subscribe to my own state
+        { topic: mqttTopics.masterStatus, qos: 0 }, // Monitor Master
       ]);
 
       // Announce Presence (If I am fresh, or maybe I should trust retained?)
@@ -146,13 +147,57 @@ export function useStationController({ stationId, brokerUrl }: StationController
         payload: bootState,
         retain: true,
       });
+
+      // Cleanup: Publish DISCONNECTED on unmount (If graceful shutdown)
+      const handleBeforeUnload = () => {
+        const disconnectState = {
+          id: effectiveStationId,
+          type: "station",
+          state: "DISCONNECTED",
+          ts: Date.now(),
+        };
+        // Use sendBeacon or standard publish if async works.
+        // For MQTT.js, synchronous might be tough on unload.
+        // But we can try to publish before close in hook cleanup.
+      };
+
+      window.addEventListener("beforeunload", handleBeforeUnload);
+
+      return () => {
+        window.removeEventListener("beforeunload", handleBeforeUnload);
+        // Explicitly publish disconnected on component unmount
+        // Note: This runs on re-renders if deps change, so be careful.
+        // We only want this on REAL unmount.
+        // Actually, re-renders are OK if the next effect connects again immediately.
+        // But better is to trust LWT for crashes, and maybe just let the connection close.
+        // The LWT should trigger if we don't send DISCONNECT packet cleanly.
+        // MQTT.js default end() sends DISCONNECT.
+      };
     }
   }, [connectionState, effectiveStationId, subscribe, publish]);
+
+  // 4b. Master State Tracking
+  const [masterState, setMasterState] = useState<"ONLINE" | "OFFLINE">("ONLINE"); // Default online (optimistic)
+
+  // ... (previous code)
 
   // 6. Handle Incoming State Updates (From Master)
   useEffect(() => {
     if (messages.length === 0) return;
     const lastMsg = messages[messages.length - 1];
+
+    // Master Status Update
+    if (lastMsg.topic === mqttTopics.masterStatus) {
+      try {
+        const payload = lastMsg.json || JSON.parse(lastMsg.payload);
+        if (payload.state) {
+          setMasterState(payload.state);
+        }
+      } catch (e) {
+        console.error("Bad master status", e);
+      }
+      return;
+    }
 
     // Only care about my topic
     if (lastMsg.topic !== mqttTopics.status(effectiveStationId)) return;
@@ -213,5 +258,6 @@ export function useStationController({ stationId, brokerUrl }: StationController
     handleReset,
     handleSafeReset,
     connectionState,
+    masterState,
   };
 }

@@ -19,6 +19,9 @@ export const mqttTopics = {
   // Event Channel (Ephemeral)
   // Used for "Start Button Click" or "GPIO Done" signals that are momentary
   events: SYSTEM_EVENTS,
+
+  // Master Presence Channel (Retained)
+  masterStatus: "system/master/status",
 };
 
 export function defaultSubscriptionsForRole(role: DeviceRole, deviceId?: string): SubscriptionRequest[] {

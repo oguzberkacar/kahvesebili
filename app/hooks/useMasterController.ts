@@ -11,7 +11,7 @@ import coffees from "../data/coffees.json";
 export type StationSharedState = {
   id: string;
   type: "station";
-  state: "IDLE" | "ORDER_RECEIVED" | "PROCESSING" | "COMPLETED";
+  state: "IDLE" | "ORDER_RECEIVED" | "PROCESSING" | "COMPLETED" | "DISCONNECTED";
   order: {
     orderId: string;
     size: string;
@@ -50,18 +50,32 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
     role: "master",
     clientId: envConfig.deviceId || "master-screen",
     enabled,
+    will: {
+      topic: mqttTopics.masterStatus,
+      payload: JSON.stringify({ state: "OFFLINE", ts: Date.now() }),
+      retain: true,
+      qos: 0,
+    },
   });
 
-  // 1. Subscribe to Global State & Events
+  // 1. Subscribe to Global State & Events & Announce Presence
   useEffect(() => {
     if (connectionState === "connected") {
       console.log("[Master] Connected. Subscribing to ALL stations...");
+
+      // Announce Online
+      publish({
+        topic: mqttTopics.masterStatus,
+        payload: { state: "ONLINE", ts: Date.now() },
+        retain: true,
+      });
+
       subscribe([
         { topic: mqttTopics.statusAll, qos: 0 }, // Retained states
         { topic: mqttTopics.events, qos: 0 }, // Momentry events
       ]);
     }
-  }, [connectionState, subscribe]);
+  }, [connectionState, subscribe, publish]);
 
   // 2. Handle Incoming Messages
   useEffect(() => {
@@ -217,7 +231,7 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
   );
 
   // Compatibility Derivations
-  const activeStations = Object.keys(stationStates);
+  const activeStations = Object.keys(stationStates).filter((id) => stationStates[id].state !== "DISCONNECTED");
   const activeOrders = Object.values(stationStates)
     .filter((s) => s.order && (s.state === "ORDER_RECEIVED" || s.state === "PROCESSING" || s.state === "COMPLETED"))
     .map((s) => ({
