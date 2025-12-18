@@ -12,13 +12,14 @@ export type StationSharedState = {
   id: string;
   type: "station";
   state: "IDLE" | "ORDER_RECEIVED" | "PROCESSING" | "COMPLETED" | "DISCONNECTED";
-  order: {
+  state: "IDLE" | "ORDER_RECEIVED" | "PROCESSING" | "COMPLETED" | "DISCONNECTED";
+  orders: {
     orderId: string;
     size: string;
     price: number;
     recipeId: string;
     customerName?: string;
-  } | null;
+  }[];
   ts: number;
 };
 
@@ -51,6 +52,7 @@ export function useStationController({ stationId, brokerUrl }: StationController
     role: "station",
     deviceId: effectiveStationId,
     clientId: effectiveStationId, // keep it stable
+    keepalive: 5,
     will: {
       topic: mqttTopics.status(effectiveStationId),
       payload: JSON.stringify({
@@ -69,7 +71,7 @@ export function useStationController({ stationId, brokerUrl }: StationController
     id: effectiveStationId,
     type: "station",
     state: "IDLE",
-    order: null,
+    orders: [],
     ts: Date.now(),
   });
 
@@ -138,7 +140,7 @@ export function useStationController({ stationId, brokerUrl }: StationController
         id: effectiveStationId,
         type: "station",
         state: "IDLE",
-        order: null,
+        orders: [],
         ts: Date.now(),
       };
 
@@ -218,7 +220,8 @@ export function useStationController({ stationId, brokerUrl }: StationController
   // 7. Actions
 
   const handleStartOrder = useCallback(() => {
-    if (!sharedState.order) return;
+    if (sharedState.orders.length === 0) return;
+    const currentOrder = sharedState.orders[0];
 
     console.log("[Station] Sending START Event...");
     // 1. Emit Event (momentary)
@@ -227,7 +230,7 @@ export function useStationController({ stationId, brokerUrl }: StationController
       payload: {
         type: "START",
         stationId: effectiveStationId,
-        orderId: sharedState.order.orderId,
+        orderId: currentOrder.orderId,
         ts: Date.now(),
       },
     });
@@ -241,7 +244,7 @@ export function useStationController({ stationId, brokerUrl }: StationController
       id: effectiveStationId,
       type: "station",
       state: "IDLE",
-      order: null,
+      orders: [],
       ts: Date.now(),
     });
   }, [publishState, effectiveStationId]);
@@ -251,8 +254,8 @@ export function useStationController({ stationId, brokerUrl }: StationController
   return {
     stationState: sharedState.state, // Map to legacy string
     coffeeConfig,
-    orders: sharedState.order ? [sharedState.order] : [], // Legacy array adapter
-    selectedOrderId: sharedState.order?.orderId || null,
+    orders: sharedState.orders, // Return actual queue
+    selectedOrderId: sharedState.orders.length > 0 ? sharedState.orders[0].orderId : null,
     handleStartOrder,
     handleSelectOrder: () => {}, // No op, single order now
     handleReset,

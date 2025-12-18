@@ -12,13 +12,13 @@ export type StationSharedState = {
   id: string;
   type: "station";
   state: "IDLE" | "ORDER_RECEIVED" | "PROCESSING" | "COMPLETED" | "DISCONNECTED";
-  order: {
+  orders: {
     orderId: string;
     size: string;
     price: number;
     recipeId: string;
     customerName?: string;
-  } | null;
+  }[];
   ts: number;
 };
 
@@ -202,17 +202,37 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
       // If we haven't received it yet (rare if connected), we can't patch.
       // We can synthesize a new state.
 
-      // Synthesize
+      // Synthesize new state with appended order
+      // We need previous state to append correctly.
+      // Since we are in a callback, we trust the React state 'stationStates' (via closure or functional update if we could)
+      // But 'publish' is async and side effect.
+      // Better: Read current state from stationStates Ref if possible, or just use what we have.
+      // Let's use Functional State Update pattern to be safe locally, but for MQTT payload we need the value.
+      // We will assume `stationStates` in scope is fresh enough or we pass a functional updater?
+      // Actually `sendOrder` is recreated on render if deps change. stationStates is NOT a dep.
+      // We should add stationStates to dependency array or use a Ref for latest state.
+
+      const currentStation = stationStates[stationId];
+      const currentOrders = currentStation?.orders || [];
+
+      const newOrderObj = {
+        orderId: orderDetails.orderId,
+        size: orderDetails.size,
+        price: orderDetails.price,
+        recipeId: orderDetails.recipeId,
+      };
+
+      const newOrders = [...currentOrders, newOrderObj];
+
       const newState: StationSharedState = {
         id: stationId,
         type: "station",
-        state: "ORDER_RECEIVED",
-        order: {
-          orderId: orderDetails.orderId,
-          size: orderDetails.size,
-          price: orderDetails.price,
-          recipeId: orderDetails.recipeId,
-        },
+        state: "ORDER_RECEIVED", // Or keep current state? If IDLE -> ORDER_RECEIVED.
+        // If PROCESSING -> Keep PROCESSING but update Queue?
+        // Let's force ORDER_RECEIVED if it was IDLE. If PROCESSING, keep PROCESSING.
+        // Simplification: Always set ORDER_RECEIVED if IDLE.
+        // Actually, let's just update the list. The Station will see the list is not empty.
+        orders: newOrders,
         ts: Date.now(),
       };
 
@@ -223,23 +243,30 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
       publish({
         topic: mqttTopics.status(stationId),
         payload: newState,
-        retain: true, // IMPORTANT: Station picks this up immediately
+        retain: true,
         qos: 0,
       });
     },
-    [publish]
+    [publish, stationStates] // Added stationStates dependency
   );
 
   // Compatibility Derivations
   const activeStations = Object.keys(stationStates).filter((id) => stationStates[id].state !== "DISCONNECTED");
   const activeOrders = Object.values(stationStates)
-    .filter((s) => s.order && (s.state === "ORDER_RECEIVED" || s.state === "PROCESSING" || s.state === "COMPLETED"))
-    .map((s) => ({
-      orderId: s.order!.orderId,
-      stationId: s.id,
-      status: s.state === "ORDER_RECEIVED" ? "SENT" : s.state, // Map enum
-      details: s.order,
-    }));
+    .filter(
+      (s) =>
+        s.orders &&
+        s.orders.length > 0 &&
+        (s.state === "ORDER_RECEIVED" || s.state === "PROCESSING" || s.state === "COMPLETED")
+    )
+    .flatMap((s) =>
+      s.orders.map((order) => ({
+        orderId: order.orderId,
+        stationId: s.id,
+        status: s.state === "ORDER_RECEIVED" ? "SENT" : s.state, // Map enum
+        details: order,
+      }))
+    );
 
   return {
     connectionState,
