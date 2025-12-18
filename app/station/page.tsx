@@ -111,12 +111,7 @@ export default function StationPage() {
   }, [stationState, animationStep]);
 
   // Not Active / Disconnected / Connection Error View
-  if (
-    stationState === "DISCONNECTED" ||
-    connectionState !== "connected" ||
-    masterState === "OFFLINE" ||
-    (!coffeeConfig && stationState === "IDLE")
-  ) {
+  if (stationState === "DISCONNECTED" || connectionState !== "connected" || masterState === "OFFLINE" || !coffeeConfig) {
     return (
       <div className={cn("w-full h-screen bg-red-50 flex items-center justify-center")}>
         <div className="w-[600px] h-[1024px] bg-red-50 relative flex flex-col items-center pt-[48px] overflow-hidden ">

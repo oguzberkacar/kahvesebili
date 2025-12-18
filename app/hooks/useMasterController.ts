@@ -104,49 +104,6 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
     }
   }, [connectionState, subscribe, publish]);
 
-  // 2. Handle Incoming Messages
-  useEffect(() => {
-    if (messages.length === 0) return;
-    const lastMsg = messages[messages.length - 1];
-    handleMessage(lastMsg);
-  }, [messages]);
-
-  const handleMessage = useCallback(
-    (msg: IncomingMessage) => {
-      try {
-        const payload: any = msg.json || JSON.parse(msg.payload);
-
-        // A. State Update (system/status/+)
-        if (msg.topic.startsWith("system/status/")) {
-          // Simple State Sync
-          const stationId = payload.id;
-          if (stationId && payload.type === "station") {
-            if (payload.state === "DISCONNECTED") {
-              console.log(`[Master] Station ${stationId} reported DISCONNECTED`);
-            }
-            setStationStates((prev) => ({
-              ...prev,
-              [stationId]: payload,
-            }));
-          }
-          return;
-        }
-
-        // B. Event (system/events) -> START Signal
-        if (msg.topic === mqttTopics.events && payload.type === "START") {
-          const { stationId, orderId } = payload;
-          console.log(`[Master] Received START Event from ${stationId} for order ${orderId}`);
-
-          // 1. Trigger GPIO Flow
-          triggerGpioFlow(stationId, orderId);
-        }
-      } catch (e) {
-        console.error("Master Handle Error", e);
-      }
-    },
-    [] // Dependencies
-  );
-
   // GPIO Logic Helper
   const triggerGpioFlow = useCallback(
     (stationId: string, orderId: string) => {
@@ -200,6 +157,49 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
     },
     [updateStationState]
   );
+
+  const handleMessage = useCallback(
+    (msg: IncomingMessage) => {
+      try {
+        const payload: any = msg.json || JSON.parse(msg.payload);
+
+        // A. State Update (system/status/+)
+        if (msg.topic.startsWith("system/status/")) {
+          // Simple State Sync
+          const stationId = payload.id;
+          if (stationId && payload.type === "station") {
+            if (payload.state === "DISCONNECTED") {
+              console.log(`[Master] Station ${stationId} reported DISCONNECTED`);
+            }
+            setStationStates((prev) => ({
+              ...prev,
+              [stationId]: payload,
+            }));
+          }
+          return;
+        }
+
+        // B. Event (system/events) -> START Signal
+        if (msg.topic === mqttTopics.events && payload.type === "START") {
+          const { stationId, orderId } = payload;
+          console.log(`[Master] Received START Event from ${stationId} for order ${orderId}`);
+
+          // 1. Trigger GPIO Flow
+          triggerGpioFlow(stationId, orderId);
+        }
+      } catch (e) {
+        console.error("Master Handle Error", e);
+      }
+    },
+    [triggerGpioFlow] // Added dependency
+  );
+
+  // 2. Handle Incoming Messages (Moved down)
+  useEffect(() => {
+    if (messages.length === 0) return;
+    const lastMsg = messages[messages.length - 1];
+    handleMessage(lastMsg);
+  }, [messages, handleMessage]);
 
   // Public Actions
   const sendOrder = useCallback(
