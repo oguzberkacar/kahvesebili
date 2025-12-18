@@ -58,6 +58,33 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
     },
   });
 
+  // Helper to update specific station state (PATCH style) -> MOVED UP
+  const updateStationState = useCallback(
+    (stationId: string, updates: Partial<StationSharedState>) => {
+      setStationStates((prev) => {
+        const current = prev[stationId];
+        if (!current) return prev; // Should be there if we are interacting
+
+        const next: StationSharedState = {
+          ...current,
+          ...updates,
+          ts: Date.now(),
+        };
+
+        // Publish Retained
+        publish({
+          topic: mqttTopics.status(stationId),
+          payload: next,
+          retain: true,
+          qos: 0,
+        });
+
+        return { ...prev, [stationId]: next };
+      });
+    },
+    [publish]
+  );
+
   // 1. Subscribe to Global State & Events & Announce Presence
   useEffect(() => {
     if (connectionState === "connected") {
@@ -121,79 +148,58 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
   );
 
   // GPIO Logic Helper
-  const triggerGpioFlow = (stationId: string, orderId: string) => {
-    // Find Pin Config
-    const numericId = parseInt(stationId.replace("station", ""), 10);
-    const coffee = coffees.find((c) => c.stationId === numericId);
+  const triggerGpioFlow = useCallback(
+    (stationId: string, orderId: string) => {
+      // Find Pin Config
+      const numericId = parseInt(stationId.replace("station", ""), 10);
+      const coffee = coffees.find((c) => c.stationId === numericId);
 
-    if (!coffee || !coffee.pin) {
-      console.warn(`[Master] No PIN config for ${stationId}`);
-      return;
-    }
+      if (!coffee || !coffee.pin) {
+        console.warn(`[Master] No PIN config for ${stationId}`);
+        return;
+      }
 
-    const isCold = coffee.tags && coffee.tags.includes("Cold");
-    const duration = isCold ? 7000 : 6000;
+      const isCold = coffee.tags && coffee.tags.includes("Cold");
+      const duration = isCold ? 7000 : 6000;
 
-    console.log(`[Master] Triggering GPIO PIN ${coffee.pin} for ${duration}ms`);
+      console.log(`[Master] Triggering GPIO PIN ${coffee.pin} for ${duration}ms`);
 
-    // 1. Update State to PROCESSING (Retained) -> Station shows animation
-    updateStationState(stationId, {
-      state: "PROCESSING",
-    });
+      // 1. Update State to PROCESSING (Retained) -> Station shows animation
+      updateStationState(stationId, {
+        state: "PROCESSING",
+      });
 
-    // 2. Call API
-    const gpioPayload = { pin: coffee.pin, duration: duration, value: 1, _v: "2.0.0" };
+      // 2. Call API
+      const gpioPayload = { pin: coffee.pin, duration: duration, value: 1, _v: "2.0.0" };
 
-    fetch("/api/gpio", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(gpioPayload),
-    })
-      .then(async (res) => {
-        // ... handle success/fail log ...
-        console.log("[Master] GPIO API Response:", res.status);
-
-        // 3. Wait Duration + Buffer
-        setTimeout(() => {
-          console.log(`[Master] Sequence Done. Setting ${stationId} to COMPLETED.`);
-          // 4. Update State to COMPLETED (Retained) -> Station shows Enjoy
-          updateStationState(stationId, {
-            state: "COMPLETED",
-          });
-        }, duration + 500);
+      fetch("/api/gpio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(gpioPayload),
       })
-      .catch((err) => {
-        console.error("GPIO Error", err);
-        // Recovery
-        setTimeout(() => {
-          updateStationState(stationId, { state: "COMPLETED" });
-        }, duration + 500);
-      });
-  };
+        .then(async (res) => {
+          // ... handle success/fail log ...
+          console.log("[Master] GPIO API Response:", res.status);
 
-  // Helper to update specific station state (PATCH style)
-  const updateStationState = (stationId: string, updates: Partial<StationSharedState>) => {
-    setStationStates((prev) => {
-      const current = prev[stationId];
-      if (!current) return prev; // Should be there if we are interacting
-
-      const next: StationSharedState = {
-        ...current,
-        ...updates,
-        ts: Date.now(),
-      };
-
-      // Publish Retained
-      publish({
-        topic: mqttTopics.status(stationId),
-        payload: next,
-        retain: true,
-        qos: 0,
-      });
-
-      return { ...prev, [stationId]: next };
-    });
-  };
+          // 3. Wait Duration + Buffer
+          setTimeout(() => {
+            console.log(`[Master] Sequence Done. Setting ${stationId} to COMPLETED.`);
+            // 4. Update State to COMPLETED (Retained) -> Station shows Enjoy
+            updateStationState(stationId, {
+              state: "COMPLETED",
+            });
+          }, duration + 500);
+        })
+        .catch((err) => {
+          console.error("GPIO Error", err);
+          // Recovery
+          setTimeout(() => {
+            updateStationState(stationId, { state: "COMPLETED" });
+          }, duration + 500);
+        });
+    },
+    [updateStationState]
+  );
 
   // Public Actions
   const sendOrder = useCallback(
