@@ -194,6 +194,12 @@ export function useStationController({ stationId, brokerUrl }: StationController
         const payload = lastMsg.json || JSON.parse(lastMsg.payload);
         if (payload.state) {
           setMasterState(payload.state);
+
+          // If Master comes ONLINE, re-announce my state (in case Master lost retained or just booted)
+          if (payload.state === "ONLINE" && sharedState.state !== "DISCONNECTED") {
+            console.log("[Station] Master back ONLINE. Re-announcing state.");
+            publishState(sharedState); // This will use the latest sharedState from closure/dep
+          }
         }
       } catch (e) {
         console.error("Bad master status", e);
@@ -215,7 +221,7 @@ export function useStationController({ stationId, brokerUrl }: StationController
     } catch (e) {
       console.error("Failed to parse station state", e);
     }
-  }, [messages, effectiveStationId]);
+  }, [messages, effectiveStationId, publishState, sharedState]);
 
   // 7. Actions
 
