@@ -56,7 +56,10 @@ export default function CoffeeCard({ coffee }: CoffeeCardProps) {
         />
         <div className="flex absolute left-2 z-50 bottom-2 gap-2">
           {coffee.tags.map((tag) => (
-            <span key={tag} className={`px-3 py-1 rounded-full bg-white text-xs font-semibold uppercase tracking-wide`}>
+            <span
+              key={tag}
+              className={`px-3 py-1 rounded-full bg-white text-secondary text-xs font-bold uppercase tracking-wide`}
+            >
               {tag}
             </span>
           ))}
