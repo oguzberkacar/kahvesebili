@@ -5,8 +5,7 @@ import { defaultSubscriptionsForRole, mqttTopics } from "../lib/mqtt/topics";
 import { useMqttClient } from "../lib/mqtt/useMqttClient";
 import type { MqttConnectConfig, PublishMessage } from "../lib/mqtt/types";
 
-const baseCard =
-  "border border-black/5 bg-white shadow-md rounded-2xl p-6 flex flex-col gap-4 w-full";
+const baseCard = "border border-black/5 bg-white shadow-md rounded-2xl p-6 flex flex-col gap-4 w-full";
 
 type TestMqttClientProps = {
   initialConfig: MqttConnectConfig;
@@ -20,28 +19,23 @@ export default function TestMqttClient({ initialConfig }: TestMqttClientProps) {
 
   const { state, error, messages, publish, subscribe, clearMessages } = useMqttClient(
     resolvedConfig,
-    defaultSubscriptionsForRole(resolvedConfig.role, resolvedConfig.deviceId),
+    defaultSubscriptionsForRole(resolvedConfig.role, resolvedConfig.deviceId)
   );
 
-  const deviceLabel = resolvedConfig.deviceId || "station";
-  const stationTopics = mqttTopics.station(deviceLabel);
+  const deviceLabel = resolvedConfig.deviceId || "station4";
+  const stationStatusTopic = mqttTopics.status(deviceLabel);
+  const eventsTopic = mqttTopics.events;
 
   useEffect(() => {
     if (!topic) {
-      const fallbackTopic =
-        resolvedConfig.role === "master"
-          ? mqttTopics.master.broadcast
-          : stationTopics.status;
+      const fallbackTopic = resolvedConfig.role === "master" ? mqttTopics.events : stationStatusTopic;
       setTopic(fallbackTopic);
     }
     if (!subscribeTopic) {
-      const fallback =
-        resolvedConfig.role === "master"
-          ? mqttTopics.master.helloAll
-          : stationTopics.command;
+      const fallback = resolvedConfig.role === "master" ? mqttTopics.statusAll : mqttTopics.masterStatus;
       setSubscribeTopic(fallback);
     }
-  }, [resolvedConfig.role, topic, subscribeTopic, stationTopics.status, stationTopics.command]);
+  }, [resolvedConfig.role, topic, subscribeTopic, stationStatusTopic]);
 
   async function handlePublish() {
     if (!topic) return;
@@ -61,9 +55,7 @@ export default function TestMqttClient({ initialConfig }: TestMqttClientProps) {
     <main className="min-h-screen w-full bg-gradient-to-br from-[#d8f2e7] via-white to-[#f1f6f5] text-gray-900 flex items-start justify-center px-6 py-10">
       <div className="w-full max-w-5xl flex flex-col gap-6">
         <header className="flex flex-wrap items-center gap-3">
-          <div className="text-sm px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 font-semibold">
-            MQTT Test
-          </div>
+          <div className="text-sm px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 font-semibold">MQTT Test</div>
           <div className="text-xs px-3 py-1 rounded-full bg-sky-100 text-sky-700 font-semibold">
             Role: {resolvedConfig.role}
           </div>
@@ -72,9 +64,7 @@ export default function TestMqttClient({ initialConfig }: TestMqttClientProps) {
               Device: {resolvedConfig.deviceId}
             </div>
           ) : null}
-          <div className="ml-auto text-xs px-3 py-1 rounded-full bg-gray-900 text-white font-semibold">
-            {state}
-          </div>
+          <div className="ml-auto text-xs px-3 py-1 rounded-full bg-gray-900 text-white font-semibold">{state}</div>
         </header>
 
         <section className={baseCard}>
@@ -90,14 +80,11 @@ export default function TestMqttClient({ initialConfig }: TestMqttClientProps) {
                 </span>
               ) : null}
               <span>
-                Client:{" "}
-                <span className="font-mono text-gray-800">{resolvedConfig.clientId}</span>
+                Client: <span className="font-mono text-gray-800">{resolvedConfig.clientId}</span>
               </span>
             </div>
             {error ? (
-              <div className="text-sm text-red-600 bg-red-50 border border-red-100 px-3 py-2 rounded-lg">
-                {error}
-              </div>
+              <div className="text-sm text-red-600 bg-red-50 border border-red-100 px-3 py-2 rounded-lg">{error}</div>
             ) : null}
           </div>
 
@@ -134,8 +121,8 @@ export default function TestMqttClient({ initialConfig }: TestMqttClientProps) {
                           ts: Date.now(),
                         },
                         null,
-                        2,
-                      ),
+                        2
+                      )
                     )
                   }
                 >
@@ -170,12 +157,10 @@ export default function TestMqttClient({ initialConfig }: TestMqttClientProps) {
               <div className="text-sm text-gray-600">
                 Önerilen topicler:
                 <div className="mt-2 space-y-1 font-mono text-xs text-gray-800">
-                  <div>{mqttTopics.master.broadcast}</div>
-                  <div>{mqttTopics.master.helloAll}</div>
-                  <div>{mqttTopics.master.statusAll}</div>
-                  <div>{stationTopics.command}</div>
-                  <div>{stationTopics.status}</div>
-                  <div>{stationTopics.hello}</div>
+                  <div>{eventsTopic}</div>
+                  <div>{mqttTopics.statusAll}</div>
+                  <div>{stationStatusTopic}</div>
+                  <div>{mqttTopics.masterStatus}</div>
                 </div>
               </div>
             </div>
@@ -203,9 +188,7 @@ export default function TestMqttClient({ initialConfig }: TestMqttClientProps) {
                       <span className="font-mono text-gray-800">{msg.topic}</span>
                       <span>{new Date(msg.receivedAt).toLocaleTimeString()}</span>
                     </div>
-                    <pre className="text-xs text-gray-900 font-mono whitespace-pre-wrap">
-                      {prettyPayload(msg.payload)}
-                    </pre>
+                    <pre className="text-xs text-gray-900 font-mono whitespace-pre-wrap">{prettyPayload(msg.payload)}</pre>
                   </div>
                 ))
             )}
