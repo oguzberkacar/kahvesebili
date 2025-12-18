@@ -7,9 +7,7 @@ import Navbar from "./Navbar";
 import { cn } from "@/lib/utils";
 import { useMaster } from "../context/MasterContext";
 import useDeviceType from "../hooks/useDeviceType";
-import type { Coffee } from "../order/page"; // Re-using type if exported, or redefine
 
-// Re-define locally to avoid import issues if not exported properly
 interface Sizes {
   small: { price: number; volume: string };
   medium: { price: number; volume: string };
@@ -39,7 +37,7 @@ interface LocalCoffee {
 
 interface OrderViewProps {
   onBackToGreeting: () => void;
-  isActive: boolean; // Just in case we want to control visibility/mounting
+  isActive: boolean;
 }
 
 export default function OrderView({ onBackToGreeting, isActive }: OrderViewProps) {
@@ -59,7 +57,7 @@ export default function OrderView({ onBackToGreeting, isActive }: OrderViewProps
       const resetTimer = () => {
         clearTimeout(timeout);
         timeout = setTimeout(() => {
-          onBackToGreeting(); // Go back to splash instead of router push
+          onBackToGreeting();
         }, 30000);
       };
 
@@ -77,6 +75,20 @@ export default function OrderView({ onBackToGreeting, isActive }: OrderViewProps
       };
     }
   }, [isActive, onBackToGreeting]);
+
+  // Reset state when view becomes inactive
+  useEffect(() => {
+    if (!isActive) {
+      // Allow transition to finish before resetting
+      const timer = setTimeout(() => {
+        setActiveView("list");
+        setSelectedCoffee(null);
+        setIsPaymentView(false);
+        setIsPaymentSuccess(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isActive]);
 
   // Get active stations from Master Context
   const { activeStations } = useMaster();
@@ -116,24 +128,20 @@ export default function OrderView({ onBackToGreeting, isActive }: OrderViewProps
         isActive ? "opacity-100" : "opacity-0 pointer-events-none absolute inset-0"
       )}
     >
-      {/* Sliding Container */}
       <Navbar
         backgroundColor="bg-black-2"
         textColor="text-black"
         blur={activeView === "list"}
-        showBackButton={true} // Always show back button to go to Greeting
+        showBackButton={true}
         onBack={handleBack}
       />
-      {/* Hidden button for quick access back if needed, or rely on Navbar */}
-      {/* <div onClick={onBackToGreeting} className="absolute top-4 left-4 w-50 h-20 z-100 cursor-pointer" /> */}
 
       <div
         className="flex flex-1 w-[200%] h-full transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)]"
         style={{ transform: activeView === "list" ? "translateX(0)" : "translateX(-50%)" }}
       >
-        {/* LIST VIEW (Left Half) */}
+        {/* LIST VIEW */}
         <div className="w-1/2 h-full flex flex-col items-center overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          {/* Content Grid */}
           <div
             className={cn("w-full px-4 md:px-6 pb-24 pt-32", deviceType === "fixed" ? "max-w-[800px]" : "max-w-7xl mx-auto")}
           >
@@ -166,7 +174,7 @@ export default function OrderView({ onBackToGreeting, isActive }: OrderViewProps
           </div>
         </div>
 
-        {/* DETAIL VIEW (Right Half) */}
+        {/* DETAIL VIEW */}
         <div className="w-1/2 h-full bg-quaternary">
           {selectedCoffee ? (
             <CoffeeDetail
