@@ -41,6 +41,9 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
   // Derived active orders for UI compatibility
   // const activeOrders = ... derived from stationStates ...
 
+  // Create a unique session ID for this Master instance to allow multiple Masters (e.g., iPad + Laptop)
+  const [sessionMasterId] = useState(() => `master-${Math.random().toString(36).slice(2, 8)}`);
+
   const {
     state: connectionState,
     subscribe,
@@ -49,14 +52,11 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
   } = useMqttClient({
     ...envConfig,
     role: "master",
-    clientId: envConfig.deviceId || "master-screen",
+    clientId: sessionMasterId, // Unique ID per session
     enabled,
-    will: {
-      topic: mqttTopics.masterStatus,
-      payload: JSON.stringify({ state: "OFFLINE", ts: Date.now() }),
-      retain: true,
-      qos: 0,
-    },
+    // REMOVED LWT (Last Will): because if one master leaves, we don't want to tell stations the "Master" is offline.
+    // The system should remain active for other masters.
+    will: undefined,
   });
 
   // Helper to update specific station state (PATCH style) -> MOVED UP
