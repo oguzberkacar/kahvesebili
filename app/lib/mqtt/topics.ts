@@ -20,8 +20,12 @@ export const mqttTopics = {
   // Used for "Start Button Click" or "GPIO Done" signals that are momentary
   events: SYSTEM_EVENTS,
 
-  // Master Presence Channel (Retained)
+  // Master Presence Channel (Retained) -> GLOBAL System Status (Old)
   masterStatus: "system/master/status",
+
+  // Multi-Master Presence (New)
+  masterPresence: (uniqueId: string) => `system/masters/${uniqueId}`,
+  masterPresenceAll: `system/masters/+`,
 };
 
 export function defaultSubscriptionsForRole(role: DeviceRole, deviceId?: string): SubscriptionRequest[] {

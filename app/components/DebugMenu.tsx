@@ -11,6 +11,8 @@ interface DebugMenuProps {
   // Master specific data
   activeStations?: string[];
   stationStates?: Record<string, any>;
+  masterStates?: Record<string, "ONLINE" | "OFFLINE">;
+  sessionId?: string; // Current master's unique session ID
   // Station specific data
   masterState?: string; // "ONLINE" | "OFFLINE"
   deviceId?: string;
@@ -25,6 +27,8 @@ export default function DebugMenu({
   connectionState,
   activeStations = [],
   stationStates = {},
+  masterStates = {},
+  sessionId,
   masterState,
   deviceId,
   onRefresh,
@@ -33,7 +37,7 @@ export default function DebugMenu({
 
   return (
     <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="bg-white/10 border border-white/20 text-white rounded-2xl w-full max-w-md p-6 shadow-2xl">
+      <div className="bg-white/10 border border-white/20 text-white rounded-2xl w-full max-w-md p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -89,7 +93,9 @@ export default function DebugMenu({
           {/* Master: Station List */}
           {role === "master" && (
             <div className="space-y-2">
-              <h3 className="text-sm font-bold text-white/50 uppercase">Connected Stations ({activeStations.length})</h3>
+              <h3 className="text-sm font-bold text-white/50 uppercase">
+                Connected Stations ({Object.keys(stationStates).length})
+              </h3>
               <div className="grid grid-cols-2 gap-2">
                 {Object.keys(stationStates).length > 0 ? (
                   Object.entries(stationStates).map(([id, state]: [string, any]) => (
@@ -110,6 +116,46 @@ export default function DebugMenu({
                   ))
                 ) : (
                   <div className="col-span-2 text-center text-white/30 text-xs py-2 italic">No stations detected yet.</div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Master: Active Controllers List */}
+          {role === "master" && (
+            <div className="space-y-2 pt-4 border-t border-white/10">
+              <h3 className="text-sm font-bold text-white/50 uppercase">
+                Active Controllers ({Object.keys(masterStates).length})
+              </h3>
+              <div className="flex flex-col gap-2">
+                {Object.keys(masterStates).length > 0 ? (
+                  Object.entries(masterStates).map(([id, state]) => {
+                    const isMe = id === sessionId;
+                    return (
+                      <div
+                        key={id}
+                        className={cn(
+                          "p-2 rounded-lg border flex items-center justify-between",
+                          isMe ? "bg-blue-500/20 border-blue-500/50" : "bg-white/5 border-white/5"
+                        )}
+                      >
+                        <span className="text-xs font-mono flex items-center gap-2">
+                          {id}
+                          {isMe && <span className="bg-blue-500 text-white text-[9px] px-1 rounded">ME</span>}
+                        </span>
+                        <div
+                          className={cn(
+                            "w-2 h-2 rounded-full",
+                            state === "OFFLINE"
+                              ? "bg-red-500 animate-pulse"
+                              : "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"
+                          )}
+                        />
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center text-white/30 text-xs py-2 italic">Waiting for peers...</div>
                 )}
               </div>
             </div>

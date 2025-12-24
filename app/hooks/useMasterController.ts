@@ -38,8 +38,8 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
   // Track ALL stations state (Key: stationId)
   const [stationStates, setStationStates] = useState<Record<string, StationSharedState>>({});
 
-  // Derived active orders for UI compatibility
-  // const activeOrders = ... derived from stationStates ...
+  // Track Active Masters (Key: uniqueSessionId, Value: ONLINE/OFFLINE)
+  const [masterStates, setMasterStates] = useState<Record<string, "ONLINE" | "OFFLINE">>({});
 
   // Create a unique session ID for this Master instance to allow multiple Masters (e.g., iPad + Laptop)
   const [sessionMasterId] = useState(() => `master-${Math.random().toString(36).slice(2, 8)}`);
@@ -54,9 +54,13 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
     role: "master",
     clientId: sessionMasterId, // Unique ID per session
     enabled,
-    // REMOVED LWT (Last Will): because if one master leaves, we don't want to tell stations the "Master" is offline.
-    // The system should remain active for other masters.
-    will: undefined,
+    // Multi-Master LWT: Tell others I am offline on my unique topic
+    will: {
+      topic: mqttTopics.masterPresence(sessionMasterId),
+      payload: JSON.stringify({ id: sessionMasterId, state: "OFFLINE", ts: Date.now() }),
+      retain: true,
+      qos: 0,
+    },
   });
 
   // Helper to update specific station state (PATCH style) -> MOVED UP
@@ -89,21 +93,29 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
   // 1. Subscribe to Global State & Events & Announce Presence
   useEffect(() => {
     if (connectionState === "connected") {
-      console.log("[Master] Connected. Subscribing to ALL stations...");
+      console.log("[Master] Connected. Subscribing to ALL stations and masters...");
 
-      // Announce Online
+      // Announce Presence (Global) - To wake up stations
       publish({
-        topic: mqttTopics.masterStatus,
+        topic: mqttTopics.masterStatus, // Legacy: "system/master/status"
         payload: { state: "ONLINE", ts: Date.now() },
         retain: true,
       });
 
+      // Announce Presence (Multi-Master) - To show up in other masters' lists
+      publish({
+        topic: mqttTopics.masterPresence(sessionMasterId),
+        payload: { id: sessionMasterId, state: "ONLINE", ts: Date.now() },
+        retain: true, // Retain so new masters see me
+      });
+
       subscribe([
-        { topic: mqttTopics.statusAll, qos: 0 }, // Retained states
-        { topic: mqttTopics.events, qos: 0 }, // Momentry events
+        { topic: mqttTopics.statusAll, qos: 0 }, // Retained station states
+        { topic: mqttTopics.events, qos: 0 }, // Momentary events
+        { topic: mqttTopics.masterPresenceAll, qos: 0 }, // Listen to other masters
       ]);
     }
-  }, [connectionState, subscribe, publish]);
+  }, [connectionState, subscribe, publish, sessionMasterId]);
 
   // GPIO Logic Helper
   const triggerGpioFlow = useCallback(
@@ -166,9 +178,8 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
       try {
         const payload: any = msg.json || JSON.parse(msg.payload);
 
-        // A. State Update (system/status/+)
+        // A. State Update (system/status/+) - Stations
         if (msg.topic.startsWith("system/status/")) {
-          // Simple State Sync
           const stationId = payload.id;
           if (stationId && payload.type === "station") {
             if (payload.state === "DISCONNECTED") {
@@ -182,7 +193,20 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
           return;
         }
 
-        // B. Event (system/events) -> START Signal
+        // B. Master Presence (system/masters/+) - Other Masters
+        if (msg.topic.startsWith("system/masters/")) {
+          const masterId = payload.id;
+          const state = payload.state; // ONLINE | OFFLINE
+          if (masterId) {
+            setMasterStates((prev) => ({
+              ...prev,
+              [masterId]: state,
+            }));
+          }
+          return;
+        }
+
+        // C. Event (system/events) -> START Signal
         if (msg.topic === mqttTopics.events && payload.type === "START") {
           const { stationId, orderId } = payload;
           console.log(`[Master] Received START Event from ${stationId} for order ${orderId}`);
@@ -194,7 +218,7 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
         console.error("Master Handle Error", e);
       }
     },
-    [triggerGpioFlow] // Added dependency
+    [triggerGpioFlow]
   );
 
   // 2. Handle Incoming Messages (Moved down)
@@ -208,22 +232,6 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
   const sendOrder = useCallback(
     (stationId: string, orderDetails: any) => {
       console.log(`[Master] Sending Order to ${stationId}`, orderDetails);
-
-      // Instead of ephemeral command, we UPDATE the Station's state to ORDER_RECEIVED
-      // But we need the current station state first.
-      // If we haven't received it yet (rare if connected), we can't patch.
-      // We can synthesize a new state.
-
-      // Synthesize new state with appended order
-      // We need previous state to append correctly.
-      // Since we are in a callback, we trust the React state 'stationStates' (via closure or functional update if we could)
-      // But 'publish' is async and side effect.
-      // Better: Read current state from stationStates Ref if possible, or just use what we have.
-      // Let's use Functional State Update pattern to be safe locally, but for MQTT payload we need the value.
-      // We will assume `stationStates` in scope is fresh enough or we pass a functional updater?
-      // Actually `sendOrder` is recreated on render if deps change. stationStates is NOT a dep.
-      // We should add stationStates to dependency array or use a Ref for latest state.
-
       const currentStation = stationStates[stationId];
       const currentOrders = currentStation?.orders || [];
 
@@ -239,11 +247,7 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
       const newState: StationSharedState = {
         id: stationId,
         type: "station",
-        state: "ORDER_RECEIVED", // Or keep current state? If IDLE -> ORDER_RECEIVED.
-        // If PROCESSING -> Keep PROCESSING but update Queue?
-        // Let's force ORDER_RECEIVED if it was IDLE. If PROCESSING, keep PROCESSING.
-        // Simplification: Always set ORDER_RECEIVED if IDLE.
-        // Actually, let's just update the list. The Station will see the list is not empty.
+        state: "ORDER_RECEIVED",
         orders: newOrders,
         ts: Date.now(),
       };
@@ -259,7 +263,7 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
         qos: 0,
       });
     },
-    [publish, stationStates] // Added stationStates dependency
+    [publish, stationStates]
   );
 
   // Compatibility Derivations
@@ -275,19 +279,26 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
       s.orders.map((order) => ({
         orderId: order.orderId,
         stationId: s.id,
-        status: s.state === "ORDER_RECEIVED" ? "SENT" : s.state, // Map enum
+        status: s.state === "ORDER_RECEIVED" ? "SENT" : s.state,
         details: order,
       }))
     );
 
   const refreshNetwork = useCallback(() => {
     console.log("[Master] Refreshing Network... Sending ONLINE broadcast.");
+    // 1. Broad Global Online
     publish({
       topic: mqttTopics.masterStatus,
       payload: { state: "ONLINE", ts: Date.now() },
       retain: true,
     });
-  }, [publish]);
+    // 2. Re-announce specific session presence
+    publish({
+      topic: mqttTopics.masterPresence(sessionMasterId),
+      payload: { id: sessionMasterId, state: "ONLINE", ts: Date.now() },
+      retain: true,
+    });
+  }, [publish, sessionMasterId]);
 
   return {
     connectionState,
@@ -296,5 +307,7 @@ export function useMasterController({ enabled = true }: { enabled?: boolean } = 
     activeOrders,
     stationStates,
     refreshNetwork,
+    masterStates, // New exposed state
+    sessionId: sessionMasterId,
   };
 }
