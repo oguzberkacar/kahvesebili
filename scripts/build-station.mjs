@@ -13,7 +13,7 @@ if (!stationId) {
 console.log(`[Build] Starting build for DEVICE_ID: ${stationId}, APP_ENV: ${appEnv}`);
 console.log(`[Build] NEXT_PUBLIC_DEVICE_ID set to: ${stationId}`);
 
-const child = spawn("npx", ["next", "build"], {
+const child = spawn("npx", ["--no-install", "next", "build"], {
   stdio: "inherit",
   env: {
     ...process.env,
