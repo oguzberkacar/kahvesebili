@@ -388,8 +388,8 @@ export default function StationPage() {
           </div>
 
           {/* Bottom Area (Swaps between Logo and Start Button) */}
-          <div className="absolute -bottom-[65%] left-1/2 -translate-x-1/2 w-[150%] aspect-square bg-white rounded-full flex items-start justify-center pt-[8%] transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
-            <div className="relative mt-8 w-full flex justify-center h-32">
+          <div className="absolute -bottom-[65%] left-1/2 -translate-x-1/2 w-[150%] aspect-square bg-white rounded-full flex items-start justify-center pt-[8%] transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] pointer-events-none">
+            <div className="relative mt-8 w-full flex justify-center h-32 pointer-events-auto">
               {/* Logo: Visible when IDLE or COMPLETED */}
               <div
                 className={cn(
