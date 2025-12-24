@@ -8,6 +8,7 @@ import useDeviceType from "../hooks/useDeviceType";
 import { cn } from "@/lib/utils";
 import SplashOverlay from "./SplashOverlay";
 import { useMaster } from "../context/MasterContext";
+import DebugMenu from "./DebugMenu";
 
 interface GreetingViewProps {
   onStart: () => void;
@@ -15,19 +16,31 @@ interface GreetingViewProps {
 
 export default function GreetingView({ onStart }: GreetingViewProps) {
   const [showSplash, setShowSplash] = useState(false);
+  const [debugOpen, setDebugOpen] = useState(false);
   const deviceType = useDeviceType();
-  const { refreshNetwork } = useMaster();
+  const { refreshNetwork, connectionState, activeStations, stationStates } = useMaster();
 
   return (
     <>
+      <DebugMenu
+        isOpen={debugOpen}
+        onClose={() => setDebugOpen(false)}
+        role="master"
+        connectionState={connectionState}
+        activeStations={activeStations}
+        stationStates={stationStates}
+        onRefresh={() => refreshNetwork()}
+      />
+
       {showSplash && <SplashOverlay onFinish={() => setShowSplash(false)} />}
       <div className="w-full h-full flex flex-col items-center justify-center bg-secondary relative overflow-hidden">
-        {/* Secret Refresh Trigger (Top Right - Over 'EN' button) */}
+        {/* Secret Debug Trigger (Top Center - Navbar Area) */}
         <div
-          onClick={() => refreshNetwork()}
-          className="absolute top-4 right-4 w-24 h-24 z-[100] cursor-pointer opacity-0 hover:opacity-5 active:bg-white/20 transition-colors rounded-full"
-          title="Force Network Refresh"
+          onClick={() => setDebugOpen(true)}
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-[200px] h-[120px] z-[100] cursor-pointer opacity-0 hover:opacity-5 active:bg-white/10 transition-colors rounded-b-3xl"
+          title="Open Debug Menu"
         />
+
         <Navbar backgroundColor="bg-white-9" textColor="text-fi" />
         <div className="w-full h-full flex flex-col items-center justify-between grow my-8">
           <div className="scale-75 md:scale-100 transition-transform">

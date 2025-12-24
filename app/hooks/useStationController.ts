@@ -290,6 +290,11 @@ export function useStationController({ stationId, brokerUrl }: StationController
 
   const handleSafeReset = handleReset; // Same for now
 
+  const reannounce = useCallback(() => {
+    console.log("[Station] Manual re-announce requested.");
+    publishState(sharedState);
+  }, [publishState, sharedState]);
+
   return {
     stationState: sharedState.state, // Map to legacy string
     coffeeConfig,
@@ -302,5 +307,6 @@ export function useStationController({ stationId, brokerUrl }: StationController
     connectionState,
     masterState,
     currentDuration: sharedState.duration,
+    reannounce,
   };
 }
