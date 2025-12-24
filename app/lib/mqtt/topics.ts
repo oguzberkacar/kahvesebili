@@ -26,6 +26,10 @@ export const mqttTopics = {
   // Multi-Master Presence (New)
   masterPresence: (uniqueId: string) => `system/masters/${uniqueId}`,
   masterPresenceAll: `system/masters/+`,
+
+  // Configuration Channel (Retained - Master sets, Station reads)
+  // system/config/station1
+  config: (stationId: string) => `system/config/${stationId}`,
 };
 
 export function defaultSubscriptionsForRole(role: DeviceRole, deviceId?: string): SubscriptionRequest[] {

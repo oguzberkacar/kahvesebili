@@ -55,6 +55,8 @@ export function useMaster() {
       stationStates: {},
       masterStates: {},
       sessionId: "unknown",
+      stationConfigs: {},
+      updateConfig: () => console.warn("Cannot update config: Not Master"),
       connectionState: "idle" as const,
       sendOrder: () => console.warn("Cannot send order: Not Master"),
       refreshNetwork: () => console.warn("Cannot refresh: Not Master"),

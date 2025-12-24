@@ -34,12 +34,12 @@ export function useStationController({ stationId, brokerUrl }: StationController
   const envConfig = getMqttConfigFromEnv();
   const effectiveStationId = stationId || envConfig.deviceId || "station1";
 
-  // 2. Local Coffee Config (Station knows itself now)
-  const coffeeConfig = useMemo(() => {
-    // Try by ID number (station4 -> 4)
+  // 2. Local Coffee Config (Dynamic: Starts from JSON, updates from MQTT)
+  const [coffeeConfig, setCoffeeConfig] = useState<any | null>(() => {
+    // Initial Hydration from built-in JSON
     const numericId = parseInt(effectiveStationId.replace("station", ""), 10);
     return coffees.find((c) => c.stationId === numericId) || null;
-  }, [effectiveStationId]);
+  });
 
   // 3. MQTT Client
   const {
@@ -80,39 +80,23 @@ export function useStationController({ stationId, brokerUrl }: StationController
   const publishState = useCallback(
     (newState: Partial<StationSharedState>) => {
       const merged: StationSharedState = {
-        ...sharedState, // use current state as base? No, use ref or pass full?
-        // Better: merge from argument assuming caller knows best or merge with existing locally
+        ...sharedState,
         ...newState,
         id: effectiveStationId,
         ts: Date.now(),
       } as StationSharedState;
 
-      // Optimistic Update
       setSharedState(merged);
 
-      // Publish Retained
       publish({
         topic: mqttTopics.status(effectiveStationId),
         payload: merged,
         retain: true,
-        qos: 0, // Keep QoS 0 for speed
+        qos: 0,
       });
     },
     [publish, effectiveStationId, sharedState]
   );
-
-  // Bug fix: publishState closure staleness.
-  // Actually, we should rely on incoming messages to update local state source of truth?
-  // Protocol:
-  // - Station writes IDLE (init)
-  // - Master writes ORDER_RECEIVED
-  // - Station writes PROCESSING (after start click) -> Wait, Master needs start signal first.
-  //
-  // Revised Flow:
-  // - Station inits: writes IDLE (retained)
-  // - Master writes: ORDER_RECEIVED (retained) -> Station udpates UI
-  // - Station clicks Start: Publishes EVENT (not state) -> Master triggers GPIO -> Master writes PROCESSING (retained)
-  // - Master writes: COMPLETED (retained) -> Station updates UI
 
   // 5. Connect & Subscribe & Announce
   useEffect(() => {
@@ -123,20 +107,10 @@ export function useStationController({ stationId, brokerUrl }: StationController
       subscribe([
         { topic, qos: 0 }, // Subscribe to my own state
         { topic: mqttTopics.masterStatus, qos: 0 }, // Monitor Master
+        { topic: mqttTopics.config(effectiveStationId), qos: 0 }, // Listen for Config overrides
       ]);
 
-      // Announce Presence (If I am fresh, or maybe I should trust retained?)
-      // We should probably NOT overwrite if there is an active order (persistence).
-      // But for now, let's Announce IDLE if we have no state.
-      // Actually, subscribing first will give us the last retained state.
-      // So we wait for message?
-      // Let's publish IDLE only if we want to reset on boot.
-      // For stability, let's publish IDLE on boot (Resetting station).
-
-      /*
-       * NOTE: Publishing IDLE on boot clears any active order after refresh.
-       * This is safer for "stuck" orders.
-       */
+      // Announce IDLE on boot (Resetting station state for safety)
       const bootState: StationSharedState = {
         id: effectiveStationId,
         type: "station",
@@ -151,85 +125,70 @@ export function useStationController({ stationId, brokerUrl }: StationController
         retain: true,
       });
 
-      // Cleanup: Publish DISCONNECTED on unmount (If graceful shutdown)
       const handleBeforeUnload = () => {
-        const disconnectState = {
-          id: effectiveStationId,
-          type: "station",
-          state: "DISCONNECTED",
-          ts: Date.now(),
-        };
-        // Use sendBeacon or standard publish if async works.
-        // For MQTT.js, synchronous might be tough on unload.
-        // But we can try to publish before close in hook cleanup.
+        // Cleanup hook
       };
 
       window.addEventListener("beforeunload", handleBeforeUnload);
-
       return () => {
         window.removeEventListener("beforeunload", handleBeforeUnload);
-        // Explicitly publish disconnected on component unmount
-        // Note: This runs on re-renders if deps change, so be careful.
-        // We only want this on REAL unmount.
-        // Actually, re-renders are OK if the next effect connects again immediately.
-        // But better is to trust LWT for crashes, and maybe just let the connection close.
-        // The LWT should trigger if we don't send DISCONNECT packet cleanly.
-        // MQTT.js default end() sends DISCONNECT.
       };
     }
   }, [connectionState, effectiveStationId, subscribe, publish]);
 
   // 4b. Master State Tracking
-  const [masterState, setMasterState] = useState<"ONLINE" | "OFFLINE">("ONLINE"); // Default online (optimistic)
-
-  // ... (previous code)
+  const [masterState, setMasterState] = useState<"ONLINE" | "OFFLINE">("ONLINE");
 
   // 6. Handle Incoming State Updates (From Master)
   useEffect(() => {
     if (messages.length === 0) return;
     const lastMsg = messages[messages.length - 1];
 
-    // Master Status Update
-    if (lastMsg.topic === mqttTopics.masterStatus) {
-      try {
-        const payload = lastMsg.json || JSON.parse(lastMsg.payload);
-        if (payload.state) {
-          setMasterState(payload.state);
-
-          // If Master comes ONLINE, re-announce my state (in case Master lost retained or just booted)
-          if (payload.state === "ONLINE" && sharedState.state !== "DISCONNECTED") {
-            console.log("[Station] Master back ONLINE. Re-announcing state.");
-            publishState(sharedState); // This will use the latest sharedState from closure/dep
-          }
-        }
-      } catch (e) {
-        console.error("Bad master status", e);
-      }
-      return;
-    }
-
-    // Only care about my topic
-    if (lastMsg.topic !== mqttTopics.status(effectiveStationId)) return;
-
     try {
       const payload = lastMsg.json || JSON.parse(lastMsg.payload);
-      // Validate schema loosely
-      if (payload.id === effectiveStationId && payload.state) {
-        // Update local react state
-        // console.log("[Station] State synced:", payload.state);
-        setSharedState(payload);
+
+      // 1. Master Status
+      if (lastMsg.topic === mqttTopics.masterStatus) {
+        if (payload.state) {
+          setMasterState(payload.state);
+          if (payload.state === "ONLINE" && sharedState.state !== "DISCONNECTED") {
+            console.log("[Station] Master back ONLINE. Re-announcing state.");
+            publishState(sharedState);
+          }
+        }
+        return;
+      }
+
+      // 2. Config Update
+      if (lastMsg.topic === mqttTopics.config(effectiveStationId)) {
+        console.log("[Station] Received Config Update:", payload);
+        // Merge Payload with existing config structure
+        // UI expects 'tags' array for Hot/Cold logic
+        const adaptedConfig = {
+          ...payload,
+          tags: payload.type === "Cold" ? ["Cold"] : ["Hot"],
+        };
+        setCoffeeConfig(adaptedConfig);
+        return;
+      }
+
+      // 3. State Sync (loopback check)
+      if (lastMsg.topic === mqttTopics.status(effectiveStationId)) {
+        if (payload.id === effectiveStationId && payload.state) {
+          setSharedState(payload);
+        }
+        return;
       }
     } catch (e) {
-      console.error("Failed to parse station state", e);
+      console.error("Msg Error", e);
     }
   }, [messages, effectiveStationId, publishState, sharedState]);
 
   // 7. Actions
 
-  // 4c. Local Selection State (For manual picking from queue)
+  // 4c. Local Selection State
   const [internalSelectedOrderId, setInternalSelectedOrderId] = useState<string | null>(null);
 
-  // Derived Selection: Use internal if valid, else default to first
   const effectiveOrderId = useMemo(() => {
     if (internalSelectedOrderId && sharedState.orders.some((o) => o.orderId === internalSelectedOrderId)) {
       return internalSelectedOrderId;
@@ -237,19 +196,13 @@ export function useStationController({ stationId, brokerUrl }: StationController
     return sharedState.orders.length > 0 ? sharedState.orders[0].orderId : null;
   }, [internalSelectedOrderId, sharedState.orders]);
 
-  // Actions
   const handleSelectOrder = useCallback((orderId: string) => {
     setInternalSelectedOrderId(orderId);
   }, []);
 
   const handleStartOrder = useCallback(() => {
     if (!effectiveOrderId) return;
-
-    // Find the order details just to be safe
-    // const order = sharedState.orders.find(o => o.orderId === effectiveOrderId);
-
     console.log(`[Station] Sending START Event for ${effectiveOrderId}...`);
-    // 1. Emit Event (momentary)
     publish({
       topic: mqttTopics.events,
       payload: {
@@ -259,23 +212,12 @@ export function useStationController({ stationId, brokerUrl }: StationController
         ts: Date.now(),
       },
     });
-
-    // 2. Optimistic Update? No, wait for Master to set PROCESSING.
   }, [publish, effectiveStationId, effectiveOrderId]);
 
   const handleReset = useCallback(() => {
-    // 1. Remove the processed order from the queue
-    // Use effectiveOrderId (the one currently active/selected) or just remove the first one if logic implies priority?
-    // Since we complete the 'selected' one, let's remove that.
     const completedId = effectiveOrderId;
-
-    // Filter out the completed order
     const nextOrders = sharedState.orders.filter((o) => o.orderId !== completedId);
-
-    // 2. Determine Next State
     const nextState = nextOrders.length > 0 ? "ORDER_RECEIVED" : "IDLE";
-
-    // 3. Publish New State
     publishState({
       id: effectiveStationId,
       type: "station",
@@ -283,12 +225,10 @@ export function useStationController({ stationId, brokerUrl }: StationController
       orders: nextOrders,
       ts: Date.now(),
     });
-
-    // Clear selection so UI picks the next one automatically or waits for user
     setInternalSelectedOrderId(null);
   }, [publishState, effectiveStationId, sharedState.orders, effectiveOrderId]);
 
-  const handleSafeReset = handleReset; // Same for now
+  const handleSafeReset = handleReset;
 
   const reannounce = useCallback(() => {
     console.log("[Station] Manual re-announce requested.");
@@ -296,9 +236,9 @@ export function useStationController({ stationId, brokerUrl }: StationController
   }, [publishState, sharedState]);
 
   return {
-    stationState: sharedState.state, // Map to legacy string
+    stationState: sharedState.state,
     coffeeConfig,
-    orders: sharedState.orders, // Return actual queue
+    orders: sharedState.orders,
     selectedOrderId: effectiveOrderId,
     handleStartOrder,
     handleSelectOrder,

@@ -18,7 +18,16 @@ export default function GreetingView({ onStart }: GreetingViewProps) {
   const [showSplash, setShowSplash] = useState(false);
   const [debugOpen, setDebugOpen] = useState(false);
   const deviceType = useDeviceType();
-  const { refreshNetwork, connectionState, activeStations, stationStates, masterStates, sessionId } = useMaster();
+  const {
+    refreshNetwork,
+    connectionState,
+    activeStations,
+    stationStates,
+    masterStates,
+    sessionId,
+    stationConfigs,
+    updateConfig,
+  } = useMaster();
 
   return (
     <>
@@ -31,6 +40,8 @@ export default function GreetingView({ onStart }: GreetingViewProps) {
         stationStates={stationStates}
         masterStates={masterStates}
         sessionId={sessionId}
+        stationConfigs={stationConfigs}
+        onUpdateConfig={updateConfig}
         onRefresh={() => refreshNetwork()}
       />
 
